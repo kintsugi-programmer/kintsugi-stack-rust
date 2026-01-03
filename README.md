@@ -233,6 +233,8 @@ bali-king@war-machine:~/BaliGit/kintsugi-stack-rust/one_three_hello_cargo$
 
 ## 2. Programming a Guessing Game
 
+![alt text](image-1.png)
+
 ```rs
 use std::{cmp::Ordering, io}; // io lib in scope 
 
@@ -242,10 +244,29 @@ use std::{cmp::Ordering, io}; // io lib in scope
 // rand = "0.5.5"
 use rand::{Rand, Rng}; 
 
+// colored library
+// colored="2.0.0"
+use colored::*;
 
+// use `cargo run` or Run Button in Vsc at the main line( comes with extension )
 fn main() {
     // intro lines print
     println!("Guess the Number !!!"); // like python/c
+
+    // Now Random Check is Left
+
+    // // Random Library
+    // // to add deps "rand" package => add `deps = "version"` in `Cargo.toml` => cargo build
+    // // [dependencies]
+    // // rand = "0.5.5"
+    // use rand::{Rand, Rng}; 
+    let secret_nos = rand::thread_rng().gen_range(1,101); // lower limit is inclusive, upper limit is exclusive 
+    // println!("Actual Number: {}", secret_nos);
+
+
+    // to make game more interesting we can have game on loop to guess till user guess the number correctly
+    loop {
+
     println!("Input Your Guess:");
 
     // variable to store stuff
@@ -262,10 +283,15 @@ fn main() {
         .read_line(&mut guess) 
         .expect("Failed to Read Line"); // iff err comes, .expect() crash program, and display message
         
+    // Shadowing, we declare one variable (let mut guess = String::new();) and then redeclare to convert the datatype but to preserve the value
     // .trim() remove whitespaces
     // .parse() helps to parse
-    let guess: u32 = guess.trim().parse()
-    .expect("Failed to Read Line");// error handling strict by language
+    // let guess: u32 = guess.trim().parse().expect("Failed to Read Line");// error handling strict by language // old way
+    let guess: u32 = match guess.trim().parse(){
+        Ok(num)=> num,
+        Err(_)=> continue // `_` means catch all
+        // to whatever any wrong input comes, continue the loop 
+    };// new way
 
     println!("You Guessed: {}",guess); // like c
     // Guess the Number !!!
@@ -273,32 +299,39 @@ fn main() {
     // 12
     // You Guessed: 12
 
-    // Now Random Check is Left
-
-    // // Random Library
-    // // to add deps "rand" package => add `deps = "version"` in `Cargo.toml` => cargo build
-    // // [dependencies]
-    // // rand = "0.5.5"
-    // use rand::{Rand, Rng}; 
-    let secret_nos = rand::thread_rng().gen_range(1,101); // lower limit is inclusive, upper limit is exclusive 
-    println!("Actual Number: {}", secret_nos);
-
     // cmp::Ordering library
+    // match guess.cmp(&secret_nos){
+    //     Ordering::Equal => {print!("YOU WIN !!!");break;},// to terminate after win is to break the loop // New way
+    //     // Ordering::Equal => print!("YOU WIN !!!"), // Old way
+    //     Ordering::Less => print!("TOO SMALL !!!"),
+    //     Ordering::Greater => print!("TOO BIG !!!")
+    // } // Old way no color
+
+    // New Way, Color-ed :)
     match guess.cmp(&secret_nos){
-        Ordering::Equal => print!("YOU WIN !!!"),
-        Ordering::Less => print!("TOO SMALL !!!"),
-        Ordering::Greater => print!("TOO BIG !!!")
+    Ordering::Equal => {
+        print!("{}","YOU WIN !!!".yellow());
+        println!();// newline cosmetic code
+        break;
+    },
+    Ordering::Less => print!("{}","TOO SMALL !!!".red()),
+    Ordering::Greater => print!("{}","TOO BIG !!!".green())
+    } 
+
+    println!();// newline cosmetic code
+
+    // basic working
+    // Guess the Number !!!
+    // Input Your Guess:
+    // 2
+    // You Guessed: 2
+    // Actual Number: 2
+    // YOU WIN !!!
+
     }
-
-
+    
 }
 
-// Guess the Number !!!
-// Input Your Guess:
-// 2
-// You Guessed: 2
-// Actual Number: 2
-// YOU WIN !!!
 ```
 
 ---
@@ -576,3 +609,49 @@ TOO SMALL !!!Input Your Guess:
 You Guessed: 58
 YOU WIN !!!
 ```
+- further improvement: add colors
+- add colored lib in `.toml` -> `colored="2.0.0"` & build it
+```bash
+bali-king@war-machine:~/BaliGit/kintsugi-stack-rust/two_guessing_game$ cargo build
+   Compiling lazy_static v1.5.0
+   Compiling colored v2.2.0
+   Compiling two_guessing_game v0.1.0 (/home/bali-king/BaliGit/kintsugi-stack-rust/two_guessing_game)
+```
+- color logic
+  - too small -> Red
+  - too big -> green
+  - win -> yellow
+- re-code match guess comparison check with text outputs `"YOU WIN !!!"` as values with color lib's methods `.red()`
+```rs
+// match guess.cmp(&secret_nos){
+    //     Ordering::Equal => {print!("YOU WIN !!!");break;},// to terminate after win is to break the loop // New way
+    //     // Ordering::Equal => print!("YOU WIN !!!"), // Old way
+    //     Ordering::Less => print!("TOO SMALL !!!"),
+    //     Ordering::Greater => print!("TOO BIG !!!")
+    // } // Old way no color
+
+    // New Way, Color-ed :)
+    match guess.cmp(&secret_nos){
+    Ordering::Equal => {print!("{}","YOU WIN !!!".yellow());break;},
+    Ordering::Less => print!("{}","TOO SMALL !!!".red()),
+    Ordering::Greater => print!("{}","TOO BIG !!!".green())
+    } 
+
+    println!();// newline cosmetic code
+```
+- some cosmetic changes
+```rs
+ match guess.cmp(&secret_nos){
+    Ordering::Equal => {
+        print!("{}","YOU WIN !!!".yellow());
+        println!();// newline cosmetic code
+        break;
+    },
+    Ordering::Less => print!("{}","TOO SMALL !!!".red()),
+    Ordering::Greater => print!("{}","TOO BIG !!!".green())
+    } 
+
+    println!();// newline cosmetic code
+```
+- working
+![alt text](image.png)

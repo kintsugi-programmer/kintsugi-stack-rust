@@ -6,6 +6,10 @@ use std::{cmp::Ordering, io}; // io lib in scope
 // rand = "0.5.5"
 use rand::{Rand, Rng}; 
 
+// colored library
+// colored="2.0.0"
+use colored::*;
+
 // use `cargo run` or Run Button in Vsc at the main line( comes with extension )
 fn main() {
     // intro lines print
@@ -58,13 +62,26 @@ fn main() {
     // You Guessed: 12
 
     // cmp::Ordering library
+    // match guess.cmp(&secret_nos){
+    //     Ordering::Equal => {print!("YOU WIN !!!");break;},// to terminate after win is to break the loop // New way
+    //     // Ordering::Equal => print!("YOU WIN !!!"), // Old way
+    //     Ordering::Less => print!("TOO SMALL !!!"),
+    //     Ordering::Greater => print!("TOO BIG !!!")
+    // } // Old way no color
+
+    // New Way, Color-ed :)
     match guess.cmp(&secret_nos){
-        Ordering::Equal => {print!("YOU WIN !!!");break;},// to terminate after win is to break the loop // New way
-        // Ordering::Equal => print!("YOU WIN !!!"), // Old way
-        Ordering::Less => print!("TOO SMALL !!!"),
-        Ordering::Greater => print!("TOO BIG !!!")
-    }
-    
+    Ordering::Equal => {
+        print!("{}","YOU WIN !!!".yellow());
+        println!();// newline cosmetic code
+        break;
+    },
+    Ordering::Less => print!("{}","TOO SMALL !!!".red()),
+    Ordering::Greater => print!("{}","TOO BIG !!!".green())
+    } 
+
+    println!();// newline cosmetic code
+
     // basic working
     // Guess the Number !!!
     // Input Your Guess:
@@ -75,8 +92,6 @@ fn main() {
 
     }
     
-
-
 }
 
 
