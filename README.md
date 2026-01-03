@@ -11,6 +11,8 @@ sudo apt install -y curl
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
+---
+
 - Rust Lang: Rust Install https://doc.rust-lang.org/book/ch01-01-installation.html
   - Windows
     - Install Linux, Just kidding !!
@@ -27,6 +29,16 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 - Rust Server Dev: Rust Analyzer Install https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
 
 ### 1.2. Hello, World!
+
+```rs
+// 1_2_hello_world.rs
+fn main(){
+    println!("Hello, World! ")
+}
+// rustc main.rs && ./main
+```
+
+---
 
 - rust code file extension `.rs`
 ```rs
@@ -99,6 +111,8 @@ cargo --version # cargo version check
 #         ├── one_three_hello_cargo
 #         └── one_three_hello_cargo.d
 ```
+
+---
 
 - Cargo: 
     - Rust's Build System
@@ -287,11 +301,15 @@ fn main() {
 // YOU WIN !!!
 ```
 
+---
+
 - process
+- initialize project
 ```bash
 cargo new two_guessing_game
 && cd two_guessing_game
 ```
+- `src/main.rs` code the basic logic
 ```rs
 use std::io; // io lib in scope 
 
@@ -326,6 +344,8 @@ fn main() {
 
 }
 ```
+- use `cargo run` or Run Button in Vsc at the main line( comes with extension )
+- Now Random Check is Left
 - to add deps "rand" package
   - add `deps = "version"` in `Cargo.toml`
 ```
@@ -349,7 +369,7 @@ bali-king@war-machine:~/BaliGit/kintsugi-stack-rust/two_guessing_game/src$ cargo
    Compiling rand v0.5.6 # Gotcha
    Compiling two_guessing_game v0.1.0 (/home/bali-king/BaliGit/kintsugi-stack-rust/two_guessing_game)
 ```
-- then random number and check logic
+- then random number and check logic :
 ```rs
     // // Random Library
     // // to add deps "rand" package => add `deps = "version"` in `Cargo.toml` => cargo build
@@ -366,12 +386,193 @@ bali-king@war-machine:~/BaliGit/kintsugi-stack-rust/two_guessing_game/src$ cargo
         Ordering::Greater => print!("TOO BIG !!!")
     }
 ```
-- thus
+- thus, the output is :
 ```
 Guess the Number !!!
 Input Your Guess:
 2
 You Guessed: 2
 Actual Number: 2
+YOU WIN !!!
+```
+- now guess logic is done
+- to make game more interesting we can have game on loop to guess till user guess the number correctly
+- put the guess input and match logic code in this `loop{ ... }`
+```rs
+// to make game more interesting we can have game on loop to guess till user guess the number correctly
+    loop {
+
+    println!("Input Your Guess:");
+
+    // variable to store stuff
+    // String, A type is Rust Standard library, utf-8, growable string
+    // new() is associative func. static method, create empty string
+    // Variables in Rust are DEFAULT IMMUTABLE, to make them mutable, use mut keyword
+    let mut guess = String::new(); // like java
+
+    // io lib in scope 
+    // use std::io; // io lib in scope 
+    // .read_line method to read line
+    // Result cases to 1. Ok() & 2. Err()
+    io::stdin() // like java
+        .read_line(&mut guess) 
+        .expect("Failed to Read Line"); // iff err comes, .expect() crash program, and display message
+        
+    // Shadowing, we declare one variable (let mut guess = String::new();) and then redeclare to convert the datatype but to preserve the value
+    // .trim() remove whitespaces
+    // .parse() helps to parse
+    // let guess: u32 = guess.trim().parse().expect("Failed to Read Line");// error handling strict by language // old way
+    let guess: u32 = match guess.trim().parse(){
+        Ok(num)=> num,
+        Err(_)=> continue // `_` means catch all
+        // to whatever any wrong input comes, continue the loop 
+    };// new way
+
+    println!("You Guessed: {}",guess); // like c
+    // Guess the Number !!!
+    // Input Your Guess:
+    // 12
+    // You Guessed: 12
+
+    // cmp::Ordering library
+    match guess.cmp(&secret_nos){
+        Ordering::Equal => {print!("YOU WIN !!!");break;},// to terminate after win is to break the loop // New way
+        // Ordering::Equal => print!("YOU WIN !!!"), // Old way
+        Ordering::Less => print!("TOO SMALL !!!"),
+        Ordering::Greater => print!("TOO BIG !!!")
+    }
+    
+    // basic working
+    // Guess the Number !!!
+    // Input Your Guess:
+    // 2
+    // You Guessed: 2
+    // Actual Number: 2
+    // YOU WIN !!!
+
+    }
+```
+```
+Guess the Number !!!
+Input Your Guess:
+20
+You Guessed: 20
+TOO SMALL !!!Input Your Guess:
+30
+You Guessed: 30
+TOO SMALL !!!Input Your Guess:
+40
+You Guessed: 40
+TOO SMALL !!!Input Your Guess:
+60
+You Guessed: 60
+TOO SMALL !!!Input Your Guess:
+80
+You Guessed: 80
+TOO SMALL !!!Input Your Guess:
+90
+You Guessed: 90
+TOO BIG !!!Input Your Guess:
+81
+You Guessed: 81
+TOO SMALL !!!Input Your Guess:
+89
+You Guessed: 89
+TOO BIG !!!Input Your Guess:
+85
+You Guessed: 85
+YOU WIN !!!Input Your Guess:
+85
+You Guessed: 85
+YOU WIN !!!Input Your Guess:
+YOU WIN !!!Input Your Guess:
+exit
+
+thread 'main' (49618) panicked at src/main.rs:46:6:
+Failed to Read Line: ParseIntError { kind: InvalidDigit }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+- now, to terminate after win is to break the loop:
+  - convert `Ordering::Equal => print!("YOU WIN !!!")` to `Ordering::Equal => {print!("YOU WIN !!!");break;}`
+```rs
+    match guess.cmp(&secret_nos){
+        Ordering::Equal => {print!("YOU WIN !!!");break;},// to terminate after win is to break the loop // New way
+        // Ordering::Equal => print!("YOU WIN !!!"), // Old way
+        Ordering::Less => print!("TOO SMALL !!!"),
+        Ordering::Greater => print!("TOO BIG !!!")
+    }
+```
+- working
+```
+Guess the Number !!!
+Input Your Guess:
+50
+You Guessed: 50
+TOO BIG !!!Input Your Guess:
+25
+You Guessed: 25
+TOO SMALL !!!Input Your Guess:
+40
+You Guessed: 40
+TOO SMALL !!!Input Your Guess:
+45
+You Guessed: 45
+YOU WIN !!!
+```
+- futher improvement: at wrong input ,the program `panick`'s
+  - put match case handling at parsing of input string
+  - convert `let guess: u32 = guess.trim().parse().expect("Failed to Read Line");// error handling strict by language` to this below
+```rs
+    // .trim() remove whitespaces
+    // .parse() helps to parse
+    // let guess: u32 = guess.trim().parse().expect("Failed to Read Line");// error handling strict by language // old way
+    let guess: u32 = match guess.trim().parse(){
+        Ok(num)=> num,
+        Err(_)=> continue // `_` means catch all
+        // to whatever any wrong input comes, continue the loop 
+    };// new way
+```
+- Key Concept **Shadowing**: we declare one variable `let mut guess = String::new();` and then re-declare to convert the datatype but to preserve the value
+```rs
+let mut guess = String::new();
+
+// Shadowing
+let guess: u32 = match guess.trim().parse(){
+        Ok(num)=> num,
+        Err(_)=> continue
+    };
+```
+- working, handling wrong inputs gracefully
+```
+Guess the Number !!!
+Input Your Guess:
+MOMO and Chutney
+Input Your Guess:
+50
+You Guessed: 50
+TOO SMALL !!!Input Your Guess:
+75
+You Guessed: 75
+TOO BIG !!!Input Your Guess:
+65
+You Guessed: 65
+TOO BIG !!!Input Your Guess:
+55
+You Guessed: 55
+TOO SMALL !!!Input Your Guess:
+53
+You Guessed: 53
+TOO SMALL !!!Input Your Guess:
+51
+You Guessed: 51
+TOO SMALL !!!Input Your Guess:
+52
+You Guessed: 52
+TOO SMALL !!!Input Your Guess:
+54
+You Guessed: 54
+TOO SMALL !!!Input Your Guess:
+58
+You Guessed: 58
 YOU WIN !!!
 ```

@@ -6,10 +6,25 @@ use std::{cmp::Ordering, io}; // io lib in scope
 // rand = "0.5.5"
 use rand::{Rand, Rng}; 
 
-
+// use `cargo run` or Run Button in Vsc at the main line( comes with extension )
 fn main() {
     // intro lines print
     println!("Guess the Number !!!"); // like python/c
+
+    // Now Random Check is Left
+
+    // // Random Library
+    // // to add deps "rand" package => add `deps = "version"` in `Cargo.toml` => cargo build
+    // // [dependencies]
+    // // rand = "0.5.5"
+    // use rand::{Rand, Rng}; 
+    let secret_nos = rand::thread_rng().gen_range(1,101); // lower limit is inclusive, upper limit is exclusive 
+    // println!("Actual Number: {}", secret_nos);
+
+
+    // to make game more interesting we can have game on loop to guess till user guess the number correctly
+    loop {
+
     println!("Input Your Guess:");
 
     // variable to store stuff
@@ -26,10 +41,15 @@ fn main() {
         .read_line(&mut guess) 
         .expect("Failed to Read Line"); // iff err comes, .expect() crash program, and display message
         
+    // Shadowing, we declare one variable (let mut guess = String::new();) and then redeclare to convert the datatype but to preserve the value
     // .trim() remove whitespaces
     // .parse() helps to parse
-    let guess: u32 = guess.trim().parse()
-    .expect("Failed to Read Line");// error handling strict by language
+    // let guess: u32 = guess.trim().parse().expect("Failed to Read Line");// error handling strict by language // old way
+    let guess: u32 = match guess.trim().parse(){
+        Ok(num)=> num,
+        Err(_)=> continue // `_` means catch all
+        // to whatever any wrong input comes, continue the loop 
+    };// new way
 
     println!("You Guessed: {}",guess); // like c
     // Guess the Number !!!
@@ -37,29 +57,27 @@ fn main() {
     // 12
     // You Guessed: 12
 
-    // Now Random Check is Left
-
-    // // Random Library
-    // // to add deps "rand" package => add `deps = "version"` in `Cargo.toml` => cargo build
-    // // [dependencies]
-    // // rand = "0.5.5"
-    // use rand::{Rand, Rng}; 
-    let secret_nos = rand::thread_rng().gen_range(1,101); // lower limit is inclusive, upper limit is exclusive 
-    println!("Actual Number: {}", secret_nos);
-
     // cmp::Ordering library
     match guess.cmp(&secret_nos){
-        Ordering::Equal => print!("YOU WIN !!!"),
+        Ordering::Equal => {print!("YOU WIN !!!");break;},// to terminate after win is to break the loop // New way
+        // Ordering::Equal => print!("YOU WIN !!!"), // Old way
         Ordering::Less => print!("TOO SMALL !!!"),
         Ordering::Greater => print!("TOO BIG !!!")
     }
+    
+    // basic working
+    // Guess the Number !!!
+    // Input Your Guess:
+    // 2
+    // You Guessed: 2
+    // Actual Number: 2
+    // YOU WIN !!!
+
+    }
+    
 
 
 }
 
-// Guess the Number !!!
-// Input Your Guess:
-// 2
-// You Guessed: 2
-// Actual Number: 2
-// YOU WIN !!!
+
+
