@@ -1,5 +1,22 @@
 # kintsugi-stack-rust
-> kintsugi-stack-rust
+
+> "Rust is technology from the past come to save the future from itself." — Graydon Hoare, Creator of Rust
+- Author: [Kintsugi-Programmer](https://github.com/kintsugi-programmer)
+
+![alt text](image.png)
+
+> Disclaimer: The content presented here is a curated blend of my personal learning journey, experiences, open-source documentation, and invaluable knowledge gained from diverse sources. I do not claim sole ownership over all the material; this is a community-driven effort to learn, share, and grow together.
+
+## Table of Contents
+- [kintsugi-stack-rust](#kintsugi-stack-rust)
+  - [Table of Contents](#table-of-contents)
+  - [1. Getting Started](#1-getting-started)
+    - [1.1. Installation](#11-installation)
+    - [1.2. Hello, World!](#12-hello-world)
+    - [1.3. Cargo](#13-cargo)
+  - [2. Programming a Guessing Game](#2-programming-a-guessing-game)
+
+---
 
 ## 1. Getting Started
 
@@ -654,4 +671,11 @@ bali-king@war-machine:~/BaliGit/kintsugi-stack-rust/two_guessing_game$ cargo bui
     println!();// newline cosmetic code
 ```
 - working
-![alt text](image.png)
+![alt text](image-2.png)
+
+---
+End-of-File
+
+The [KintsugiStack](https://github.com/kintsugi-programmer/KintsugiStack) repository, authored by Kintsugi-Programmer, is less a comprehensive resource and more an Artifact of Continuous Research and Deep Inquiry into Computer Science and Software Engineering. It serves as a transparent ledger of the author's relentless pursuit of mastery, from the foundational algorithms to modern full-stack implementation.
+
+> Made with 💚 [Kintsugi-Programmer](https://github.com/kintsugi-programmer)
