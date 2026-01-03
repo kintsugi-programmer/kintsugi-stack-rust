@@ -3,7 +3,7 @@
 
 ## 1. Getting Started
 
-## 1.1. Installation
+### 1.1. Installation
 
 ```bash
 sudo apt update
@@ -26,7 +26,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   - Linux: `$ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh`
 - Rust Server Dev: Rust Analyzer Install https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
 
-## 1.2. Hello, World!
+### 1.2. Hello, World!
 
 - rust code file extension `.rs`
 ```rs
@@ -45,7 +45,7 @@ rustc main.rs
 ./main
 ```
 
-## 1.3. Cargo
+### 1.3. Cargo
 
 ```bash
 cargo --version # cargo version check
@@ -215,4 +215,163 @@ bali-king@war-machine:~/BaliGit/kintsugi-stack-rust/one_three_hello_cargo$
         │       └── s-heho98ij63-039vdoh.lock
         ├── one_three_hello_cargo
         └── one_three_hello_cargo.d
+```
+
+## 2. Programming a Guessing Game
+
+```rs
+use std::{cmp::Ordering, io}; // io lib in scope 
+
+// Random Library
+// to add deps "rand" package => add `deps = "version"` in `Cargo.toml` => cargo build
+// [dependencies]
+// rand = "0.5.5"
+use rand::{Rand, Rng}; 
+
+
+fn main() {
+    // intro lines print
+    println!("Guess the Number !!!"); // like python/c
+    println!("Input Your Guess:");
+
+    // variable to store stuff
+    // String, A type is Rust Standard library, utf-8, growable string
+    // new() is associative func. static method, create empty string
+    // Variables in Rust are DEFAULT IMMUTABLE, to make them mutable, use mut keyword
+    let mut guess = String::new(); // like java
+
+    // io lib in scope 
+    // use std::io; // io lib in scope 
+    // .read_line method to read line
+    // Result cases to 1. Ok() & 2. Err()
+    io::stdin() // like java
+        .read_line(&mut guess) 
+        .expect("Failed to Read Line"); // iff err comes, .expect() crash program, and display message
+        
+    // .trim() remove whitespaces
+    // .parse() helps to parse
+    let guess: u32 = guess.trim().parse()
+    .expect("Failed to Read Line");// error handling strict by language
+
+    println!("You Guessed: {}",guess); // like c
+    // Guess the Number !!!
+    // Input Your Guess:
+    // 12
+    // You Guessed: 12
+
+    // Now Random Check is Left
+
+    // // Random Library
+    // // to add deps "rand" package => add `deps = "version"` in `Cargo.toml` => cargo build
+    // // [dependencies]
+    // // rand = "0.5.5"
+    // use rand::{Rand, Rng}; 
+    let secret_nos = rand::thread_rng().gen_range(1,101); // lower limit is inclusive, upper limit is exclusive 
+    println!("Actual Number: {}", secret_nos);
+
+    // cmp::Ordering library
+    match guess.cmp(&secret_nos){
+        Ordering::Equal => print!("YOU WIN !!!"),
+        Ordering::Less => print!("TOO SMALL !!!"),
+        Ordering::Greater => print!("TOO BIG !!!")
+    }
+
+
+}
+
+// Guess the Number !!!
+// Input Your Guess:
+// 2
+// You Guessed: 2
+// Actual Number: 2
+// YOU WIN !!!
+```
+
+- process
+```bash
+cargo new two_guessing_game
+&& cd two_guessing_game
+```
+```rs
+use std::io; // io lib in scope 
+
+fn main() {
+    // intro lines print
+    println!("Guess the Number !!!"); // like python/c
+    println!("Input Your Guess:");
+
+    // variable to store stuff
+    // String, A type is Rust Standard library, utf-8, growable string
+    // new() is associative func. static method, create empty string
+    // Variables in Rust are DEFAULT IMMUTABLE, to make them mutable, use mut keyword
+    let mut guess = String::new(); // like java
+
+    // io lib in scope 
+    // .read_line method to read line
+    // Result cases to 1. Ok() & 2. Err()
+    io::stdin() // like java
+        .read_line(&mut guess) 
+        .expect("Failed to Read Line"); // iff err comes, .expect() crash program, and display message
+        
+
+    println!("You Guessed {} !!!",guess); // like c
+   
+    // Guess the Number !!!
+    // Input Your Guess:
+    // 12
+    // You Guessed 12
+    //  !!!
+
+    // Now Random Check is Left
+
+}
+```
+- to add deps "rand" package
+  - add `deps = "version"` in `Cargo.toml`
+```
+[package]
+name = "two_guessing_game"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rand = "0.5.5"
+```
+- then
+```bash
+cargo build
+```
+```
+bali-king@war-machine:~/BaliGit/kintsugi-stack-rust/two_guessing_game/src$ cargo build
+   Compiling rand_core v0.4.2
+   Compiling libc v0.2.178
+   Compiling rand_core v0.3.1
+   Compiling rand v0.5.6 # Gotcha
+   Compiling two_guessing_game v0.1.0 (/home/bali-king/BaliGit/kintsugi-stack-rust/two_guessing_game)
+```
+- then random number and check logic
+```rs
+    // // Random Library
+    // // to add deps "rand" package => add `deps = "version"` in `Cargo.toml` => cargo build
+    // // [dependencies]
+    // // rand = "0.5.5"
+    // use rand::{Rand, Rng}; 
+    let secret_nos = rand::thread_rng().gen_range(1,101); // lower limit is inclusive, upper limit is exclusive 
+    println!("Actual Number: {}", secret_nos);
+
+    // cmp::Ordering library
+    match guess.cmp(&secret_nos){
+        Ordering::Equal => print!("YOU WIN !!!"),
+        Ordering::Less => print!("TOO SMALL !!!"),
+        Ordering::Greater => print!("TOO BIG !!!")
+    }
+```
+- thus
+```
+Guess the Number !!!
+Input Your Guess:
+2
+You Guessed: 2
+Actual Number: 2
+YOU WIN !!!
 ```
