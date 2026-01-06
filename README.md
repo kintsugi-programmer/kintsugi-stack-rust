@@ -1150,6 +1150,13 @@ fn main(){
 
 ### 3.3. Functions
 
+```rs
+```
+
+---
+
+
+
 ### 3.4. Comments
 
 ### 3.5. Control Flow
