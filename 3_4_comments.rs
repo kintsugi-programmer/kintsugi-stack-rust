@@ -9,7 +9,7 @@ fn main(){
     Block Comments
     For Multilines
     */
-    // other ways : doc comments, refer to doc segment
+    // other ways : doc comments, refer to 14.2.Publishing a Crate to Crates.io
     
     // Multiline Convention
     // So we're doing something complicated here, long enough that we need
@@ -26,5 +26,6 @@ fn main(){
 
 
     */
+    // Also at Rust's Features, You can Make Documentations Easily within Code, refer to 14.2.Publishing a Crate to Crates.io
 
 }
