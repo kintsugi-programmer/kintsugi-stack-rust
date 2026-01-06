@@ -11,7 +11,7 @@
 ## Table of Contents
 - [kintsugi-stack-rust](#kintsugi-stack-rust)
   - [Table of Contents](#table-of-contents)
-- [Rust's Official Documentation](#rusts-official-documentation)
+- [Rust's Official Documentation's Codes](#rusts-official-documentations-codes)
   - [1. Getting Started](#1-getting-started)
     - [1.1. Installation](#11-installation)
     - [1.2. Hello, World!](#12-hello-world)
@@ -26,7 +26,7 @@
 
 ---
 
-# Rust's Official Documentation 
+# Rust's Official Documentation's Codes
 
 - parent doc: https://doc.rust-lang.org/stable/
 - "the book"(The Rust Programming Language): https://doc.rust-lang.org/stable/book/
