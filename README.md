@@ -1212,6 +1212,7 @@ fn func_3_2(x:u128, y:u128) -> u128{ // specify return type
 ```
 
 ---
+
 - Functions
 ```rs
 // Functions
@@ -1300,6 +1301,9 @@ fn main(){
 
 }
 ```
+
+---
+
 - Comments
 ```rs
 // comments
