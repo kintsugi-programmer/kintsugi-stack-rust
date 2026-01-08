@@ -36,6 +36,8 @@
     - [6.2. The match Control Flow Construct](#62-the-match-control-flow-construct)
     - [6.3. Concise Control Flow with if let and let else](#63-concise-control-flow-with-if-let-and-let-else)
   - [7. Packages, Crates, and Modules](#7-packages-crates-and-modules)
+  - [8. Common Collections](#8-common-collections)
+  - [9. Error Handling](#9-error-handling)
 
 
 ---
@@ -4671,6 +4673,637 @@ mod hosting;
 - Privacy by default with explicit public exposure
 - Flexible path system for referencing items
 - Clean code organization with file separation
+
+## 8. Common Collections
+
+**Introduction**
+- This chapter covers managing collections in Rust
+- Collections allow storing multiple values
+- Unlike arrays or tuples, collections are allocated on the heap
+- Collections can grow or shrink in size as needed
+- Three main collection types covered: Vectors, Strings, and Hash Maps
+
+---
+
+**VECTORS**
+
+**What Are Vectors**
+- Vectors store multiple values of the same type
+- They are allocated on the heap (variable size)
+- Can grow and shrink dynamically
+
+**Creating Vectors**
+
+**Method 1: Using vec::new()**
+```rust
+let mut v: Vec<i32> = Vec::new();
+```
+- Creates an empty vector
+- Must specify type using generic syntax (Vec<i32>) because Rust can't infer type from empty vector
+- Can be made mutable to add elements later
+
+**Adding Elements with push()**
+```rust
+let mut v: Vec<i32> = Vec::new();
+v.push(1);
+v.push(2);
+v.push(3);
+```
+- Vector must be mutable to use push()
+- push() method adds elements to the end of the vector
+
+**Method 2: Using vec! Macro**
+```rust
+let v2 = vec![1, 2, 3];
+```
+- Convenient way to create and initialize vector with values
+- Type inference works here - Rust can infer type from values
+- No need to specify type explicitly
+
+**Vector Scope and Dropping**
+```rust
+{
+    let v2 = vec![1, 2, 3];
+} // v2 is dropped here
+```
+- Vectors are dropped when they go out of scope
+- All elements inside the vector are also dropped
+- Same behavior as any heap-allocated type
+
+**Accessing Vector Elements**
+
+**Method 1: Direct Indexing**
+```rust
+let v = vec![1, 2, 3, 4, 5];
+let third = &v[2];
+println!("The third element is {}", third);
+```
+- Uses brackets with zero-based index
+- Returns a reference to the element
+- **Risk**: Will cause runtime panic if index is out of bounds
+- Example with invalid index:
+```rust
+let third = &v[20]; // Runtime error: index out of bounds
+```
+- Error message: "index out of bounds: the len is 5 but the index is 20"
+- This is a **runtime error**, not compile-time (unlike arrays)
+- Vectors have variable size, so bounds can't be checked at compile time
+
+**When to use direct indexing:**
+- When you expect your program to crash if an invalid index is used
+- When you're certain the index is valid
+
+**Method 2: Using get() Method**
+```rust
+let v = vec![1, 2, 3, 4, 5];
+match v.get(2) {
+    Some(third) => println!("The third element is {third}"),
+    None => println!("There is no third element."),
+}
+```
+- get() method returns an Option<&T>
+- Returns Some(&element) if index is valid
+- Returns None if index is invalid
+- Must handle both cases with match expression
+- Program won't crash on invalid index - handles gracefully
+
+**When to use get():**
+- When you want to handle out-of-bounds errors gracefully
+- When you don't want your program to crash on invalid index
+
+**Ownership Rules with References**
+
+**The Problem:**
+```rust
+let mut v = vec![1, 2, 3, 4, 5];
+let third = &v[2];        // immutable reference
+v.push(6);                // mutable reference
+println!("{}", third);    // Error!
+```
+- **Error**: Cannot have immutable and mutable references at the same time
+- Line 1: Takes immutable reference to element
+- Line 2: Takes mutable reference to push element
+- Line 3: Uses immutable reference
+- This violates Rust's borrowing rules
+
+**Why This Is a Problem:**
+- Immutable reference expects value to not change
+- When pushing to vector, might need to allocate more memory
+- Memory allocation could move all elements to new locations
+- Original reference would point to invalid memory location
+
+**Iterating Over Vectors**
+
+**Immutable Iteration:**
+```rust
+let v = vec![1, 2, 3, 4, 5];
+for i in &v {
+    println!("{}", i);
+}
+```
+- Uses for-in loop with reference to vector
+- Takes immutable reference to each element
+- Prints each element
+
+**Mutable Iteration:**
+```rust
+let mut v = vec![1, 2, 3, 4, 5];
+for i in &mut v {
+    *i += 50;
+}
+```
+- Takes mutable reference to vector
+- Uses dereference operator (*) to get underlying value
+- Modifies each element by adding 50
+- Dereference operator covered in detail in Chapter 15
+
+**Storing Enums in Vectors**
+
+**The Problem:**
+- Vectors can only store one type of data
+- Sometimes need to store different types (like spreadsheet cells)
+
+**The Solution:**
+- Create an enum with variants for each type
+- All variants are under the same enum type
+- Vector stores the enum type
+
+**Example - Spreadsheet Cells:**
+```rust
+enum SpreadsheetCell {
+    Int(i32),
+    Float(f64),
+    Text(String),
+}
+
+let row = vec![
+    SpreadsheetCell::Int(3),
+    SpreadsheetCell::Float(10.12),
+    SpreadsheetCell::Text(String::from("blue")),
+];
+```
+- Enum SpreadsheetCell has three variants
+- Vector stores SpreadsheetCell type
+- Can have different variants in the same vector
+
+**Accessing Enum Variants:**
+```rust
+match &row[1] {
+    SpreadsheetCell::Int(i) => println!("{}", i),
+    _ => println!("Not an integer"),
+}
+```
+- Must use match expression to determine which variant
+- Reference the element from vector
+- Handle each variant appropriately
+
+---
+
+**STRINGS**
+
+**String Complexity Warning**
+- Strings are complicated in lower-level programming languages
+- Higher-level languages abstract away this complexity
+- In Rust, programmers must deal with string complexity directly
+
+**What Is a String in Rust**
+- Strings are stored as a collection of UTF-8 encoded bytes
+- Computers only understand ones and zeros (bits and bytes)
+- Programs must interpret bytes and display correct characters
+- Encoding defines how to convert between bytes and characters
+
+**Understanding String Encoding**
+
+**ASCII (American Standard Code for Information Interchange):**
+- Early string encoding standard
+- Each character stored as 1 byte (only 7 bits used)
+- Can represent only 128 unique characters
+- Covers: English alphabet, special characters, some commands
+- **Problem**: Only represents English characters
+- Other countries created their own encoding standards
+- Multiple standards created confusion about which one to use
+
+**Unicode:**
+- Universal character set
+- Represents characters from all well-known languages
+- Includes emojis and special symbols
+- Backwards compatible with ASCII
+- First 128 symbols of Unicode are ASCII characters
+- Solves the problem of multiple encoding standards
+
+**UTF-8:**
+- Variable-width character encoding for Unicode
+- Most popular Unicode encoding
+- Each character can be 1, 2, 3, or 4 bytes long
+- **Important difference from ASCII**: Characters are different sizes
+- Used as default encoding in Rust
+
+**Creating Strings**
+
+**Method 1: New Function**
+```rust
+let s = String::new();
+```
+- Creates empty string
+- Similar to creating empty vector
+
+**Method 2: String Slice**
+```rust
+let s = "hello";
+```
+- Creates string slice (string literal)
+
+**Method 3: to_string() Method**
+```rust
+let s = "hello".to_string();
+```
+- Converts string slice to owned String
+- Takes ownership of the data
+
+**Method 4: String::from() Function**
+```rust
+let s = String::from("hello");
+```
+- Creates owned String from string slice
+- Alternative to to_string()
+
+**UTF-8 Encoding in Practice:**
+```rust
+let english = String::from("Hello");
+let russian = String::from("Здравствуйте");
+let japanese = String::from("こんにちは");
+```
+- Strings can be written in many languages
+- All use UTF-8 encoding internally
+
+**Appending to Strings**
+
+**Growing String Size:**
+- Strings can grow or shrink (like vectors)
+- Allocated on the heap
+
+**Method 1: push_str()**
+```rust
+let mut s = String::from("foo");
+s.push_str("bar");
+```
+- Appends a string slice to the end
+- Takes string slice (doesn't take ownership)
+- Result: "foobar"
+
+**Method 2: push()**
+```rust
+let mut s = String::from("foo");
+s.push('!');
+```
+- Appends a single character
+- Takes a char type (single quotes)
+
+**Combined Example:**
+```rust
+let mut s = String::from("foo");
+s.push_str("bar");
+s.push('!');
+// Result: "foobar!"
+```
+
+**Concatenating Strings**
+
+**Method 1: Plus Operator (+)**
+```rust
+let s1 = String::from("Hello, ");
+let s2 = String::from("world!");
+let s3 = s1 + &s2;
+```
+- Moves ownership of s1 into s3
+- Takes reference to s2 (doesn't take ownership)
+- Appends s2 characters to end of s3
+- **Memory efficient**: Doesn't copy s1
+- **Important**: Cannot use s1 after this operation
+
+**Error Example:**
+```rust
+let s1 = String::from("Hello, ");
+let s2 = String::from("world!");
+let s3 = s1 + &s2;
+println!("{}", s1); // Error: value borrowed after move
+```
+- s1 has been moved to s3
+- Cannot use s1 after it's been moved
+
+**Method 2: format! Macro**
+```rust
+let s1 = String::from("Hello, ");
+let s2 = String::from("world!");
+let s3 = format!("{}{}", s1, s2);
+```
+- Combines strings without taking ownership
+- Can still use s1 and s2 after this call
+- More flexible than plus operator
+
+**String Indexing Problem**
+
+**Why This Doesn't Work:**
+```rust
+let s = String::from("hello");
+let h = s[0]; // Error!
+```
+- **Error**: Strings cannot be indexed by integer
+- Would expect to get first character 'h'
+- Works in higher-level languages but not in Rust
+
+**Reason 1: Byte Length Confusion**
+
+**English Example:**
+```rust
+let s = String::from("hello");
+```
+- String has 5 characters
+- Length is 5 bytes
+- Each character is 1 byte
+- Indexing would work (but still not allowed)
+
+**Russian Example:**
+```rust
+let s = String::from("Здравствуйте");
+```
+- String has 12 visible characters
+- Length is 24 bytes
+- Each character is 2 bytes long
+- First character is 2 bytes, not 1
+- s[0] would only give half the character (1 byte)
+
+**Three Ways to Represent Text in Unicode**
+
+**Example: Hindi Word "नमस्ते" (Namaste)**
+
+**1. Bytes:**
+- Collection of raw bytes
+- 18 bytes total for this word
+- Lowest level representation
+
+**2. Scalar Values (char type in Rust):**
+- Building blocks in Unicode
+- Can represent full character or parts of character
+- Rust's char type refers to scalar values
+
+**3. Grapheme Clusters:**
+- What humans consider "characters"
+- What you see when reading
+- "नमस्ते" has 4 grapheme clusters
+- This is what we typically want
+
+**Accessing String Data**
+
+**Problem:**
+- Rust doesn't know what you want: bytes, scalar values, or grapheme clusters
+- Must use specific methods to be explicit
+
+**Method 1: bytes()**
+```rust
+let s = String::from("नमस्ते");
+for b in s.bytes() {
+    println!("{}", b);
+}
+```
+- Returns collection of bytes
+- Iterates over every byte
+- Prints raw byte values
+
+**Method 2: chars()**
+```rust
+let s = String::from("नमस्ते");
+for c in s.chars() {
+    println!("{}", c);
+}
+```
+- Returns collection of scalar values (char type)
+- Iterates over Unicode scalar values
+
+**Method 3: graphemes()**
+```rust
+use unicode_segmentation::UnicodeSegmentation;
+
+let s = String::from("नमस्ते");
+for g in s.graphemes(true) {
+    println!("{}", g);
+}
+```
+- Returns what humans consider "characters"
+- **Not in standard library** - requires external crate
+- Must add to Cargo.toml:
+```toml
+unicode-segmentation = "version"
+```
+- Pass `true` for extended grapheme clusters
+- This is usually what you want
+
+**String Complexity Summary**
+- Strings are complex in Rust
+- Must understand encoding and different representations
+- Different methods for different needs
+- Future video planned for deeper dive into strings
+
+---
+
+**HASH MAPS**
+
+**What Are Hash Maps**
+- Store key-value pairs
+- Keys and values can be any type
+- Uses hashing function to determine memory placement
+- Efficient data structure for lookups
+
+**Creating Hash Maps**
+
+**Step 1: Import HashMap**
+```rust
+use std::collections::HashMap;
+```
+- HashMap is not in prelude
+- Must bring into scope from standard library
+
+**Step 2: Create Keys**
+```rust
+let team_blue = String::from("Blue");
+let team_yellow = String::from("Yellow");
+```
+- Example: tracking game scores
+- Keys are team names
+- Values will be scores
+
+**Step 3: Create HashMap and Insert Values**
+```rust
+let mut scores = HashMap::new();
+scores.insert(team_blue, 10);
+scores.insert(team_yellow, 50);
+```
+- Use new() function to create empty HashMap
+- Use insert() to add key-value pairs
+- Blue team has score of 10
+- Yellow team has score of 50
+
+**Ownership with Hash Maps**
+
+**Moving Ownership:**
+```rust
+let blue = String::from("Blue");
+let yellow = String::from("Yellow");
+
+let mut scores = HashMap::new();
+scores.insert(blue, 10);
+scores.insert(yellow, 50);
+
+println!("{}", blue); // Error!
+```
+- Passing strings without reference moves ownership
+- HashMap takes ownership of keys and values
+- **Error**: Cannot use blue after it's been moved
+
+**Using References:**
+- Could pass references instead: `&blue`
+- Would require using lifetimes
+- Lifetimes covered in Chapter 10
+
+**Accessing Hash Map Values**
+
+**Using get() Method:**
+```rust
+let team_name = String::from("Blue");
+let score: Option<&i32> = scores.get(&team_name);
+```
+- get() takes reference to key
+- Returns Option<&V> (optional reference to value)
+- Returns Some(&value) if key exists
+- Returns None if key doesn't exist
+
+**Why Option is Returned:**
+- Can't guarantee value will be found
+- Invalid key would return None
+- Must handle both cases
+
+**Iterating Over Hash Maps**
+
+**Using for-in Loop:**
+```rust
+for (key, value) in &scores {
+    println!("{}: {}", key, value);
+}
+```
+- Iterate over all key-value pairs
+- Extracts tuple containing key and value
+- Prints each pair
+
+**Updating Hash Maps**
+
+**Overwriting Values:**
+```rust
+let mut scores = HashMap::new();
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Blue"), 20);
+```
+- First insert: Blue = 10
+- Second insert: Blue = 20
+- Second insert overwrites first value
+- Final value for Blue is 20
+
+**Inserting Only If Key Doesn't Exist:**
+```rust
+scores.entry(String::from("Yellow")).or_insert(30);
+scores.entry(String::from("Yellow")).or_insert(50);
+```
+- entry() method returns Entry enum
+- Entry represents value for given key
+- or_insert() inserts value only if key doesn't exist
+- First line: Yellow doesn't exist, inserts 30
+- Second line: Yellow exists, does nothing
+- Final value for Yellow is 30
+
+**Updating Based on Old Value**
+
+**Word Count Example:**
+```rust
+let text = "hello world wonderful world";
+let mut map = HashMap::new();
+
+for word in text.split_whitespace() {
+    let count = map.entry(word).or_insert(0);
+    *count += 1;
+}
+```
+
+**How It Works:**
+
+**Step 1: Split Text**
+- split_whitespace() creates collection of words
+- Collection: ["hello", "world", "wonderful", "world"]
+
+**Step 2: Iterate Over Words**
+- for-in loop iterates through each word
+
+**Step 3: Update Count**
+- entry(word) gets Entry enum for word
+- or_insert(0) inserts 0 if word doesn't exist, or does nothing
+- or_insert() returns mutable reference to value
+- Dereference (*count) and increment by 1
+
+**Example Walkthrough:**
+
+**Iteration 1: "hello"**
+- entry("hello") - no entry exists
+- or_insert(0) - creates new entry, value = 0
+- Returns mutable reference to 0
+- *count += 1 - increments to 1
+- Result: hello = 1
+
+**Iteration 2: "world"**
+- entry("world") - no entry exists
+- or_insert(0) - creates new entry, value = 0
+- Returns mutable reference to 0
+- *count += 1 - increments to 1
+- Result: world = 1
+
+**Iteration 3: "wonderful"**
+- entry("wonderful") - no entry exists
+- or_insert(0) - creates new entry, value = 0
+- Returns mutable reference to 0
+- *count += 1 - increments to 1
+- Result: wonderful = 1
+
+**Iteration 4: "world" (again)**
+- entry("world") - entry exists with value 1
+- or_insert(0) - does nothing
+- Returns mutable reference to existing value (1)
+- *count += 1 - increments to 2
+- Result: world = 2
+
+**Final Output:**
+```rust
+println!("{:?}", map);
+// Output: {"hello": 1, "world": 2, "wonderful": 1}
+```
+
+---
+
+**CHAPTER 8 SUMMARY**
+
+**What Was Covered:**
+- **Vectors**: Dynamic arrays on the heap, can grow/shrink
+- **Strings**: UTF-8 encoded byte collections with complexity
+- **Hash Maps**: Key-value pairs with hashing for efficient storage
+
+**Key Concepts:**
+- All three collections are heap-allocated
+- All can grow or shrink dynamically
+- Each has specific use cases and considerations
+- Ownership rules apply to all collections
+
+**Next Steps:**
+- Practice using these collections
+- Understand the trade-offs of each type
+- Prepare for more advanced Rust concepts
+
+## 9. Error Handling
 
 ---
 
