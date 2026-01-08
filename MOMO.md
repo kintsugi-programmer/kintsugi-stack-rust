@@ -2800,13 +2800,8 @@ Key Concepts:
 
 ## 6. Enums and Pattern Matching
 
-### 6.1. Defining an Enum
-
 **Introduction**
 
-- Channel: Let's Get Rusty, hosted by Bogdan
-- Focus: Rust programming language
-- Previous chapter covered: Structs (Chapter 5) - grouping related data
 - Current chapter: Enums (Chapter 6)
 - **Key concept**: Structs and enums are the building blocks for creating new types in Rust
 
@@ -2816,7 +2811,7 @@ Key Concepts:
 - The Option enum (specific enum type)
 - Pattern matching
 
----
+### 6.1. Defining an Enum
 
 **What Are Enums?**
 
@@ -3387,3 +3382,5 @@ if let Some(3) = some_value {
 **Building Blocks**:
 - Structs (Chapter 5) and Enums (Chapter 6) are the building blocks for creating new types in Rust
 - These concepts are fundamental to Rust programming
+
+## Packages, Crates, and Modules
