@@ -3383,4 +3383,667 @@ if let Some(3) = some_value {
 - Structs (Chapter 5) and Enums (Chapter 6) are the building blocks for creating new types in Rust
 - These concepts are fundamental to Rust programming
 
-## Packages, Crates, and Modules
+## 7. Packages, Crates, and Modules
+
+**Introduction**
+- Previous chapter covered: Enums and pattern matching (Chapter 6)
+- This chapter covers: Managing growing projects using packages, crates, and modules
+- Previous videos wrote all code in one file in the default module
+- As projects grow, need ways to organize and encapsulate code
+
+**Why We Need a Module System**
+- Example scenario: Authentication code chunk
+- Don't want rest of code to know everything about how authentication works
+- Want to expose only a login method, keep rest hidden
+- Need organization and privacy control as code grows
+
+**Rust Module System Overview**
+
+**Package**
+- Created when you type `cargo new`
+- Top level of the module system
+- Stores crates
+
+**Crates**
+- Two types:
+  - **Binary crate**: Code you can execute
+  - **Library crate**: Code that can be used by other programs
+- Crates contain modules
+
+**Modules**
+- Allow you to organize chunks of code
+- Control privacy rules
+- Example: Library crate containing authentication module
+  - Code inside authentication module can be private
+  - Expose one public login method
+  - Outside code must specify path to call the public login method
+
+**Workspaces**
+- Meant for very large projects
+- Allow storing interrelated packages inside the workspace
+- Will be covered in Chapter 14
+
+**Creating Packages and Crates**
+
+**Creating a New Package**
+
+Step 1: Create package using cargo
+```
+cargo new my-project
+```
+
+Step 2: Navigate into directory and open in VS Code
+```
+cd my-project
+```
+
+**Default File Structure**
+- `cargo.toml` file at root
+- `src` directory with default files
+- In `cargo.toml`: package section with name "my-project"
+
+**Crate Conventions**
+
+**Binary Crate Convention**
+- If `main.rs` exists in source directory
+- Binary crate automatically created with same name as package
+- `main.rs` becomes the crate root
+- Crate root: source file where Rust compiler starts when building your crate
+- Also makes up the root module of your crate
+
+**Library Crate Convention**
+- Create file called `lib.rs` in source directory
+- Rust automatically creates library crate with same name as package
+- `lib.rs` becomes the crate root
+
+**Example Package Structure**
+- Package name: my-project
+- Has two crates (even though none defined in cargo.toml):
+  - One binary crate (from main.rs)
+  - One library crate (from lib.rs)
+
+**Adding More Binary Crates**
+- Create folder called `bin` in source directory
+- Each file in this folder represents another binary crate
+- Example: create file `another_one.rs` in `bin` folder
+
+**Rules Around Crates**
+
+**Rule 1**: Package must have at least one crate
+
+**Rule 2**: Package can have either:
+- Zero library crates, OR
+- One library crate
+
+**Rule 3**: Package can have any number of binary crates
+
+**Modules Deep Dive**
+
+**Creating Restaurant Library Package**
+
+Create new package with library crate:
+```
+cargo new restaurant --lib
+```
+
+Navigate and open:
+```
+cd restaurant
+```
+
+**Default Structure**
+- Source directory contains `lib.rs` (not main.rs)
+- Default test module included (can be deleted)
+
+**Restaurant Structure Concept**
+- Two parts:
+  - **Front of house**: Where customers are
+  - **Back of house**: Where food is made, dishes cleaned, manager area
+
+**Module Code Example - Front of House**
+
+```rust
+mod front_of_house {
+    mod hosting {
+        fn add_to_wait_list() {}
+        fn seat_at_table() {}
+    }
+    
+    mod serving {
+        fn take_order() {}
+        fn serve_order() {}
+        fn take_payment() {}
+    }
+}
+```
+
+**Module Structure Explanation**
+- Modules specified using `mod` keyword
+- Followed by module name
+- Curly brackets contain module contents
+- `front_of_house` module contains two other modules: `hosting` and `serving`
+- `hosting` module has two functions: `add_to_wait_list` and `seat_at_table`
+- `serving` module has three functions: `take_order`, `serve_order`, `take_payment`
+
+**What Modules Can Contain**
+- Other modules (nested)
+- Structs
+- Enums
+- Constants
+- Traits
+- Functions
+
+**Module Tree Concept**
+- Similar to directory tree on computer
+- Root module: `crate` (created by default for crate root lib.rs)
+- Inside `crate`: `front_of_house` module
+- Inside `front_of_house`: `hosting` and `serving` modules
+- Each module contains its functions
+
+**Paths in Rust**
+
+**Path Analogy**
+- Like file paths in directory tree
+- To reference item in module tree (like a function), must specify path
+
+**Simplified Example**
+
+```rust
+mod front_of_house {
+    mod hosting {
+        fn add_to_wait_list() {}
+    }
+}
+
+pub fn eat_at_restaurant() {
+    // Absolute path
+    crate::front_of_house::hosting::add_to_wait_list();
+    
+    // Relative path
+    front_of_house::hosting::add_to_wait_list();
+}
+```
+
+**Path Types**
+
+**Absolute Path**
+- Starts at root of module tree
+- Begins with `crate`
+- Example: `crate::front_of_house::hosting::add_to_wait_list()`
+
+**Relative Path**
+- Starts from current module
+- Example: `front_of_house::hosting::add_to_wait_list()`
+- `eat_at_restaurant` function is inside `crate` module
+- Can start directly with `front_of_house`
+
+**Path Syntax**
+- Identifiers separated by double colon `::`
+
+**Privacy Rules in Rust**
+
+**Default Privacy Behavior**
+- Child modules and everything inside them are private from parent module perspective
+- In example: `front_of_house` cannot see `hosting` or anything inside `hosting`
+
+**Reverse Direction**
+- Child modules CAN see anything defined in parent modules
+
+**Purpose**
+- Hide implementation details by default
+- Only expose functions needed to outside world
+
+**Making Items Public**
+
+**The `pub` Keyword**
+
+Making module public:
+```rust
+mod front_of_house {
+    pub mod hosting {
+        fn add_to_wait_list() {}
+    }
+}
+```
+
+Error moves from module to function - function still private
+
+Making function public:
+```rust
+mod front_of_house {
+    pub mod hosting {
+        pub fn add_to_wait_list() {}
+    }
+}
+```
+
+Now `add_to_wait_list` accessible outside hosting module
+
+**Relative Paths with Super Keyword**
+
+**Example Code**
+
+```rust
+fn serve_order() {}
+
+mod back_of_house {
+    fn fix_incorrect_order() {
+        cook_order();
+        super::serve_order();
+    }
+    
+    fn cook_order() {}
+}
+```
+
+**Explanation**
+- `serve_order` function defined in top `crate` module
+- `back_of_house` module has two functions: `fix_incorrect_order` and `cook_order`
+- Inside `fix_incorrect_order`:
+  - Can call `cook_order` (defined in same module)
+  - Can call `serve_order` using relative path with `super`
+- `super` keyword references parent module (in this case `crate`)
+
+**Privacy Rules for Structs**
+
+**Example Code**
+
+```rust
+mod back_of_house {
+    pub struct Breakfast {
+        pub toast: String,
+        seasonal_fruit: String,
+    }
+    
+    impl Breakfast {
+        pub fn summer(toast: &str) -> Breakfast {
+            Breakfast {
+                toast: String::from(toast),
+                seasonal_fruit: String::from("peaches"),
+            }
+        }
+    }
+}
+
+pub fn eat_at_restaurant() {
+    let mut meal = back_of_house::Breakfast::summer("Rye");
+    meal.toast = String::from("Wheat");
+}
+```
+
+**Initial Errors**
+- Breakfast struct private by default
+- Summer associated function private by default
+
+**Fix Step 1**: Add `pub` to struct and function
+```rust
+pub struct Breakfast {
+    toast: String,
+    seasonal_fruit: String,
+}
+
+pub fn summer(toast: &str) -> Breakfast {
+    // function body
+}
+```
+
+**Struct Field Privacy**
+- Even with public struct, fields are private by default
+- To make field public: add `pub` keyword to field
+- Example: `pub toast: String`
+- Now can reassign toast field
+- `seasonal_fruit` remains private
+
+**Important Struct Behavior**
+- Cannot create Breakfast struct directly in `eat_at_restaurant`
+- Must use `summer` associated function
+- Reason: Breakfast struct includes private field `seasonal_fruit`
+- Attempting direct creation causes error: "seasonal_fruit field is private"
+
+**Privacy Rules for Enums**
+
+**Example Code**
+
+```rust
+mod back_of_house {
+    pub enum Appetizer {
+        Soup,
+        Salad,
+    }
+}
+
+pub fn eat_at_restaurant() {
+    let order1 = back_of_house::Appetizer::Soup;
+    let order2 = back_of_house::Appetizer::Salad;
+}
+```
+
+**Initial Error**
+- Appetizer private by default
+
+**Fix**: Make enum public
+```rust
+pub enum Appetizer {
+    Soup,
+    Salad,
+}
+```
+
+**Enum Variants Behavior**
+- Don't need to explicitly mark variants as public
+- When enum marked public, all variants automatically public
+- Reason: Enums wouldn't be useful if variants were private
+
+**The Use Keyword**
+
+**Problem Example**
+
+```rust
+mod front_of_house {
+    pub mod hosting {
+        pub fn add_to_wait_list() {}
+    }
+}
+
+pub fn eat_at_restaurant() {
+    crate::front_of_house::hosting::add_to_wait_list();
+}
+```
+
+Specifying full path every time isn't pretty or ideal
+
+**Solution: Use Keyword**
+- Brings path into scope
+- Minimizes repetition
+
+**Absolute Path Example**
+
+```rust
+use crate::front_of_house::hosting;
+
+pub fn eat_at_restaurant() {
+    hosting::add_to_wait_list();
+}
+```
+
+Now hosting module in scope, don't need to specify `front_of_house`
+
+**Relative Path Example**
+
+```rust
+use self::front_of_house::hosting;
+
+pub fn eat_at_restaurant() {
+    hosting::add_to_wait_list();
+}
+```
+
+- `self` references current module
+- Then specify `front_of_house` and `hosting`
+
+**Idiomatic Use Patterns**
+
+**For Functions**
+- Bring function's parent module into scope (NOT the function itself)
+- Could bring function directly, but not idiomatic
+- Reason: Still minimizing path, but making clear function is not local
+- Shows function defined inside another module
+
+Example of idiomatic way:
+```rust
+use crate::front_of_house::hosting;
+
+hosting::add_to_wait_list();  // Clear it's from hosting module
+```
+
+**For Enums, Structs, and Other Items**
+- Idiomatic to specify full path
+- Bring the item itself into scope
+
+**Exception to Full Path Rule**
+- When bringing two items with same name from different modules
+- Bring parent modules instead to prevent name conflicts
+
+**Handling Name Conflicts**
+
+**Example: Two Result Types**
+
+```rust
+use std::fmt;
+use std::io;
+
+fn function1() -> fmt::Result {
+    // code
+}
+
+fn function2() -> io::Result<()> {
+    // code
+}
+```
+
+- Both modules have Result type
+- Bring parent modules into scope
+- Reference Result by specifying parent module first
+- Prevents name conflicts
+
+**Alternative: Using `as` Keyword**
+
+```rust
+use std::fmt::Result;
+use std::io::Result as IoResult;
+
+fn function1() -> Result {
+    // code
+}
+
+fn function2() -> IoResult<()> {
+    // code
+}
+```
+
+- Bring Result from fmt into scope normally
+- Bring Result from io into scope, rename to IoResult
+- Use `as` keyword for renaming
+- Functions can reference each type by its name
+
+**Re-exporting**
+
+**Example Code**
+
+```rust
+pub use crate::front_of_house::hosting;
+
+pub fn eat_at_restaurant() {
+    hosting::add_to_wait_list();
+}
+```
+
+**Explanation**
+- `use` brings hosting module into scope for this file
+- `pub use` also makes it available to external code
+- Called re-exporting
+- Only `eat_at_restaurant` accessible externally without this
+- With `pub use`, external code can reference hosting directly
+
+**Using External Dependencies**
+
+**Step 1**: Add dependency to cargo.toml
+
+```toml
+[dependencies]
+rand = "0.8.5"
+```
+
+**Step 2**: Bring into scope in lib.rs
+
+```rust
+use rand::Rng;
+
+fn example() {
+    let secret_number = rand::thread_rng().gen_range(1..=100);
+}
+```
+
+- Brings Rng trait into scope from external dependency
+- Same code from guessing game example
+- Creates random number from 1 to 100
+
+**Nested Paths**
+
+**Problem**: Multiple items from same path
+
+```rust
+use rand::Rng;
+use rand::CryptoRng;
+use rand::ErrorKind;
+```
+
+**Solution**: Use nested paths
+
+```rust
+use rand::{Rng, CryptoRng, ErrorKind};
+```
+
+- Specify common part of path: `rand`
+- Double colon, curly brackets
+- List nested paths inside brackets
+- Keeps code clean and concise
+
+**Another Nested Path Example**
+
+Before:
+```rust
+use std::io;
+use std::io::Write;
+```
+
+After:
+```rust
+use std::io::{self, Write};
+```
+
+- Common path: `std::io`
+- Use `self` to refer to io itself
+- Then specify Write
+
+**The Glob Operator**
+
+**Bringing All Public Items**
+
+```rust
+use std::io::*;
+```
+
+- Asterisk is glob operator
+- Brings all public items underneath io into scope
+- Use sparingly as can make unclear what's in scope
+
+**Separating Modules Into Different Files**
+
+**Starting Point**
+- Multiple modules defined in one file
+- As program grows, module might get large
+- Want to move module definition into another file
+
+**Moving front_of_house Module**
+
+**Step 1**: Create new file
+- In root of source directory
+- Name: `front_of_house.rs`
+
+**Step 2**: Move module contents
+- Take contents of `front_of_house` module
+- Paste into new `front_of_house.rs` file
+
+**Step 3**: Update lib.rs
+Before:
+```rust
+mod front_of_house {
+    // contents here
+}
+```
+
+After:
+```rust
+mod front_of_house;
+```
+
+- Remove curly brackets
+- Add semicolon instead
+- Tells Rust: define front_of_house module here, get contents from file with same name
+
+**Moving Child Modules**
+
+**Moving hosting Module**
+
+**Step 1**: Create directory structure
+- Create directory called `front_of_house` in source
+- Create file `hosting.rs` inside that directory
+
+**Step 2**: Move module contents
+- Go to `front_of_house.rs` file
+- Take contents of hosting module
+- Paste into `hosting.rs` file
+
+**Step 3**: Update front_of_house.rs
+Before:
+```rust
+mod hosting {
+    // contents here
+}
+```
+
+After:
+```rust
+mod hosting;
+```
+
+- Remove curly brackets
+- Replace with semicolon
+
+**Result**
+- Everything still works as expected in lib.rs
+- Code organized into separate files
+
+**Module Declaration Rules Summary**
+
+**Using Curly Brackets**
+- Define contents inline
+- Example: `mod front_of_house { /* contents */ }`
+
+**Using Semicolon**
+- Contents in different file
+- Example: `mod front_of_house;`
+- Contents must be in file with same name as module
+- For parent modules: file in source directory root
+- For child modules: file must be in directory named after parent module
+
+**Example Structure**
+- Declare `front_of_house` in lib.rs with semicolon
+- Contents in `front_of_house.rs` file
+- Declare `hosting` child module in `front_of_house.rs` with semicolon
+- Contents in `front_of_house/hosting.rs` file
+- Directory name matches parent module name
+
+**Chapter Summary**
+
+**What Was Covered**
+- Rust module system
+- Packages
+- Crates (binary and library)
+- Modules and nested modules
+- Privacy rules (private by default, pub keyword)
+- Paths (absolute and relative)
+- Bringing paths into scope (use keyword)
+- Re-exporting (pub use)
+- Separating module content into separate files
+- External dependencies
+- Nested paths
+- Glob operator
+- Module tree concept
+
+**Key Takeaways**
+- Module system helps organize growing projects
+- Privacy by default with explicit public exposure
+- Flexible path system for referencing items
+- Clean code organization with file separation
