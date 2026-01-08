@@ -2797,3 +2797,593 @@ Key Concepts:
 - Automatic referencing and dereferencing simplifies syntax
 - Multiple implementation blocks are allowed
 - Derived traits provide default implementations
+
+## 6. Enums and Pattern Matching
+
+### 6.1. Defining an Enum
+
+**Introduction**
+
+- Channel: Let's Get Rusty, hosted by Bogdan
+- Focus: Rust programming language
+- Previous chapter covered: Structs (Chapter 5) - grouping related data
+- Current chapter: Enums (Chapter 6)
+- **Key concept**: Structs and enums are the building blocks for creating new types in Rust
+
+**Topics Covered in This Chapter**
+
+- Enums (enumerations)
+- The Option enum (specific enum type)
+- Pattern matching
+
+---
+
+**What Are Enums?**
+
+**Definition and Purpose**
+
+- Enums allow us to enumerate a list of variants
+- Different languages implement enums with varying features
+- **In Rust**: Enums are extremely powerful
+- Most similar to enums in functional programming languages
+
+**When to Use Enums Over Structs**
+
+- Use enums when you can enumerate all possible variants
+- Use when a value can only be one variant at a time
+
+---
+
+**Example: IP Addresses**
+
+**Why IP Addresses Are Good for Enums**
+
+- Only two variants exist: Version 4 and Version 6
+- An IP address can only be one of those variants at any time
+- These properties make enums the right choice
+
+**Creating an IP Address Enum**
+
+```rust
+enum IpAddressKind {
+    Version4,
+    Version6,
+}
+```
+
+- Start with `enum` keyword
+- Follow with the enum name (IpAddressKind)
+- Use curly brackets
+- List all variants inside (Version4, Version6)
+
+**Creating Instances**
+
+```rust
+fn main() {
+    let four = IpAddressKind::Version4;
+    let six = IpAddressKind::Version6;
+}
+```
+
+- Variants are namespaced under their identifier
+- Use `::` (colon colon) to specify each variant
+- Both variables (four and six) are of the same type: IpAddressKind
+
+**Using Enums in Functions**
+
+```rust
+fn route(ip_kind: IpAddressKind) {
+    // function body
+}
+```
+
+- Can define functions that take the enum type
+- Can pass either variant (four or six) because they're the same type
+
+---
+
+**Storing Data in Enums**
+
+**Initial Approach: Using a Struct**
+
+```rust
+struct IpAddress {
+    kind: IpAddressKind,
+    address: String,
+}
+
+fn main() {
+    let localhost = IpAddress {
+        kind: IpAddressKind::Version4,
+        address: String::from("127.0.0.1"),
+    };
+}
+```
+
+- This approach groups the version with the actual IP address
+- But there's a more concise way
+
+**Better Approach: Data Inside Enum Variants**
+
+```rust
+enum IpAddressKind {
+    Version4(String),
+    Version6(String),
+}
+
+fn main() {
+    let localhost = IpAddressKind::Version4(String::from("127.0.0.1"));
+}
+```
+
+- Add parentheses after the variant
+- Specify the type of data to store (in this case, String)
+- More concise than using a separate struct
+
+**Different Data Types per Variant**
+
+```rust
+enum IpAddressKind {
+    Version4(u8, u8, u8, u8),
+    Version6(String),
+}
+
+fn main() {
+    let localhost = IpAddressKind::Version4(127, 0, 0, 1);
+}
+```
+
+- **Important**: Enum variants can store different types of data
+- Version4 stores four 8-bit integers (u8)
+- Version6 stores a String
+- This flexibility is easily achieved with enums
+
+---
+
+**Variety of Data Types in Enums**
+
+**The Message Enum Example**
+
+```rust
+enum Message {
+    Quit,                       // stores no data
+    Move { x: i32, y: i32 },   // stores an anonymous struct
+    Write(String),              // stores a single string
+    ChangeColor(i32, i32, i32), // stores three integers
+}
+```
+
+**Four Different Variants**:
+- **Quit**: Stores no data
+- **Move**: Stores an anonymous struct with x and y fields
+- **Write**: Stores a single String
+- **ChangeColor**: Stores three integers (i32)
+
+**Alternative Approach with Structs**
+
+```rust
+struct QuitMessage;
+struct MoveMessage { x: i32, y: i32 }
+struct WriteMessage(String);
+struct ChangeColorMessage(i32, i32, i32);
+```
+
+- Could define each variant as a separate struct
+- **Problem**: These structs are all different types
+- **Benefit of enum**: All variants are grouped under the Message type
+
+---
+
+**Methods on Enums**
+
+**Implementation Block**
+
+```rust
+impl Message {
+    fn call(&self) {
+        // method body
+    }
+}
+```
+
+- Just like structs, can define methods and associated functions on enums
+- Use an implementation block (`impl`)
+- Define methods with `&self` parameter
+
+---
+
+**The Option Enum**
+
+**The Problem with Null Values**
+
+- Many languages have null values
+- Null represents: a value could exist OR be null (no value)
+- **Problem**: Type system can't guarantee a value isn't null when you use it
+- Can lead to runtime errors
+
+**Rust's Solution: No Null Values**
+
+- **Mind blown**: Rust has no null values
+- Instead, Rust has the Option enum
+
+**The Option Enum Definition**
+
+```rust
+enum Option<T> {
+    Some(T),
+    None,
+}
+```
+
+- Has only two variants:
+  - **Some**: Stores some value (T is a generic, can be any value)
+  - **None**: Stores no value
+
+**When to Use Option**
+
+- Use when a value could potentially be null or not exist
+- Wrap the value in the Option enum
+- **Benefit**: Type system enforces handling the None case
+- **Guarantee**: In the Some case, the value is present
+
+**Option Enum in Program Scope**
+
+- Optional values are so useful that:
+  - Option enum is included in program scope by default
+  - Its variants (Some, None) are also included by default
+
+**Examples of Optional Values**
+
+```rust
+let some_number = Some(5);           // optional integer
+let some_string = Some("a string");  // optional string slice
+let absent_number: Option<i32> = None; // optional integer set to None
+```
+
+**Type Inference**:
+- First two variables: Don't need type annotation (Rust infers from values)
+- `some_number`: Inferred as integer from value 5
+- `some_string`: Inferred as string slice from "a string"
+- **None case**: Must annotate type because no value is passed in
+
+---
+
+**Working with Option Values**
+
+**The Problem: Can't Directly Use Optional Values**
+
+```rust
+let x: i32 = 5;
+let y: Option<i32> = Some(5);
+let sum = x + y;  // ERROR: cannot add Option<i32> to i32
+```
+
+- **Compile-time error**: Cannot add an optional type to an integer type
+- They're different types
+- This is intentional - forces you to handle the None case
+
+**Solution: Extract Values from Variants**
+
+- Need to extract the integer out of the Some variant
+- Must write code that handles all possible variants:
+  - If variant is None: Run this set of code
+  - If variant is Some: Safely use the value and run this set of code
+
+**Using unwrap_or Method**
+
+```rust
+let x: i32 = 5;
+let y: Option<i32> = Some(5);
+let sum = x + y.unwrap_or(0);  // sum = 10
+```
+
+- `unwrap_or` method: If y has a value, use it; if not, use default value
+- Default value is 0 in this case
+- Since y is Some(5), sum = 5 + 5 = 10
+
+**With None Value**
+
+```rust
+let x: i32 = 5;
+let y: Option<i32> = None;
+let sum = x + y.unwrap_or(0);  // sum = 5
+```
+
+- When y is None, uses default value 0
+- Code still runs without errors
+- sum = 5 + 0 = 5
+
+### 6.2. The match Control Flow Construct
+
+**The Match Expression**
+
+**Introduction to Match**
+
+- Match allows you to compare a value against a set of patterns
+- **Patterns can be**:
+  - Literals
+  - Variables
+  - Wild cards
+  - Many other types (covered in Chapter 18)
+
+**Powerful Features**
+
+- Expressive patterns make match powerful
+- **Exhaustive**: Must match all possible cases
+- Very useful for enums
+
+**Example: Coin Enum**
+
+```rust
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter,
+}
+
+fn value_in_cents(coin: Coin) -> u8 {
+    match coin {
+        Coin::Penny => 1,
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter => 25,
+    }
+}
+```
+
+- Enumerates various coin types
+- Function takes a coin and returns its value
+- Each arm returns a value
+- Code for each arm is short (no curly brackets needed)
+
+**Match with Longer Code**
+
+```rust
+fn value_in_cents(coin: Coin) -> u8 {
+    match coin {
+        Coin::Penny => {
+            println!("Lucky penny!");
+            1
+        }
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter => 25,
+    }
+}
+```
+
+- When code is longer, use curly brackets
+- Can execute multiple statements before returning
+
+---
+
+**Patterns That Bind to Values**
+
+**Creating US State Enum**
+
+```rust
+#[derive(Debug)]
+enum UsState {
+    Alabama,
+    Alaska,
+    // ... other states
+}
+```
+
+- Represents the state minted on each quarter
+- Derives Debug trait for easy printing
+
+**Modifying Quarter Variant**
+
+```rust
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter(UsState),
+}
+```
+
+- Quarter variant now stores a UsState
+
+**Binding in Match Expression**
+
+```rust
+fn value_in_cents(coin: Coin) -> u8 {
+    match coin {
+        Coin::Penny => 1,
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter(state) => {
+            println!("State quarter from {:?}!", state);
+            25
+        }
+    }
+}
+```
+
+- `state` variable binds to the UsState stored inside Quarter
+- Can use the bound variable in the arm's code
+- Prints out the state and returns 25
+
+**Using the Function**
+
+```rust
+fn main() {
+    value_in_cents(Coin::Quarter(UsState::Alaska));
+}
+```
+
+- Pass a Quarter containing Alaska
+- Running the code prints: "State quarter from Alaska!"
+
+---
+
+**Match with Option Enum**
+
+**The plus_one Function**
+
+```rust
+fn plus_one(x: Option<i32>) -> Option<i32> {
+    match x {
+        None => None,
+        Some(i) => Some(i + 1),
+    }
+}
+```
+
+- Takes an optional integer
+- Returns an optional integer
+- **First arm**: If x is None, return None
+- **Second arm**: If x is Some, bind the integer to `i`, return Some(i + 1)
+
+**Important Note**
+
+- Cannot just return `i + 1`
+- Must wrap it in `Some` because return value is an Option
+
+**Using plus_one in main**
+
+```rust
+fn main() {
+    let five = Some(5);
+    let six = plus_one(five);
+    let none = plus_one(None);
+}
+```
+
+**First Call**: `plus_one(five)`
+- x is Some(5)
+- Match goes through arms in order
+- First arm (None) doesn't match
+- Second arm (Some) matches, i becomes 5
+- Returns Some(5 + 1) = Some(6)
+
+**Second Call**: `plus_one(None)`
+- x is None
+- Match on x
+- First arm (None) matches
+- Returns None immediately
+
+---
+
+**Match is Exhaustive**
+
+**Missing an Arm**
+
+```rust
+fn plus_one(x: Option<i32>) -> Option<i32> {
+    match x {
+        Some(i) => Some(i + 1),
+        // ERROR: missing None arm
+    }
+}
+```
+
+- If we remove the first arm (None case), we get a compile error
+- **Error message**: Missing an arm
+- Specifies that we're not matching on the None variant
+- **Must match all possible values**
+
+---
+
+**The Underscore Placeholder**
+
+**Many Possible Values**
+
+- In cases with many different types of values
+- Don't want to write an arm for each one
+- Use the underscore (`_`) placeholder
+
+**Example**
+
+```rust
+match x {
+    Some(i) => {
+        // execute this code
+    }
+    _ => {
+        // execute this code for any other pattern
+    }
+}
+```
+
+**Meaning**:
+- Match x
+- If x matches Some, execute the first code block
+- Otherwise, if it's any other pattern, execute the second code block
+- `_` acts as a catch-all for all remaining patterns
+
+### 6.3. Concise Control Flow with if let and let else
+
+**The if-let Syntax**
+
+**Verbose Match Example**
+
+```rust
+let some_value = Some(3);
+match some_value {
+    Some(3) => println!("three"),
+    _ => (),
+}
+```
+
+- Variable `some_value` equals Some(3)
+- Match on `some_value`
+- If exactly Some(3), print "three"
+- Otherwise, do nothing
+- **Problem**: Only care about one variant, but have to write entire match expression
+
+**Rewriting with if-let**
+
+```rust
+if let Some(3) = some_value {
+    println!("three");
+}
+```
+
+**How to Read This Syntax**:
+- Start with `if let`
+- **Read the next part backwards**
+- "If some_value matches Some(3), then print three"
+
+**Comparison: Match vs if-let**
+
+**Match Expression**:
+- Exhaustive (must specify all values)
+- More verbose (one extra line of code)
+- More explicit about handling all cases
+
+**if-let Syntax**:
+- Only specify the pattern you care about
+- All other patterns are ignored
+- Less verbose (saves one line)
+- **Note**: Syntax can be confusing
+- Good to know it exists
+
+**Author's Opinion**:
+- The if-let syntax is confusing
+- Would probably just use the match expression
+- But good to know if-let exists as an option
+
+---
+
+**Chapter Summary**
+
+**Topics Covered**:
+- Enums and how to create them
+- Pattern matching with match expressions
+- The Option enum and why Rust doesn't have null
+- The if-let syntax as an alternative to match
+
+**Key Takeaways**:
+- Enums are powerful in Rust
+- Can store different types of data in different variants
+- Match expressions are exhaustive and expressive
+- Option enum forces handling of potential null cases
+- Multiple ways to work with enums (match, if-let, methods)
+
+**Building Blocks**:
+- Structs (Chapter 5) and Enums (Chapter 6) are the building blocks for creating new types in Rust
+- These concepts are fundamental to Rust programming
