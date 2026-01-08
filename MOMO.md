@@ -2262,3 +2262,538 @@ let slice = &a[0..2];  // Slice of array
 - References allow borrowing without taking ownership
 - Slices provide safe references to portions of collections
 - All of this prevents common memory bugs before runtime
+
+## 5. Using Structs to Structure Related Data
+
+### 5.1. Defining and Instantiating Structs
+
+Introduction to Structs
+
+Structs and enums are the building blocks for creating new types in Rust. This chapter covers grouping related data using structs, defining methods and associated functions on structs, and how they compare to tuples.
+
+What Are Structs?
+
+Structs allow you to group related data together. Think of them as object attributes in an object-oriented programming language.
+
+Creating Your First Struct
+
+To create a new cargo project:
+- Create a new project (example name: struxx)
+- Use the struct keyword followed by the struct name
+
+Basic Struct Syntax
+
+```rust
+struct User {
+    username: String,
+    email: String,
+    sign_in_count: u64,
+    active: bool,
+}
+```
+
+Key Components:
+- **struct keyword** - declares a new struct
+- **User** - name of the struct
+- **username: String** - field name and type
+- **email: String** - another field
+- **sign_in_count: u64** - unsigned 64-bit integer field
+- **active: bool** - boolean field
+
+Benefits of Structs Over Tuples
+
+Structs allow grouping of related data of different types (strings, unsigned 64-bit integer, boolean). Two main advantages:
+- **Naming the structure** - creates a new type
+- **Naming the data inside** - allows referencing data by name instead of by index location
+
+Creating Struct Instances
+
+Basic instance creation:
+
+```rust
+fn main() {
+    let user1 = User {
+        email: "example@email.com",
+        username: "someusername",
+        active: true,
+        sign_in_count: 1,
+    };
+}
+```
+
+**Important**: Attributes can be specified in any order when creating an instance.
+
+Accessing Struct Fields
+
+Use dot notation to access specific values:
+
+```rust
+let name = user1.username;
+```
+
+Modifying Struct Fields
+
+To modify fields:
+1. Make the entire struct mutable
+2. Use dot notation to change values
+
+```rust
+let mut user1 = User {
+    email: "example@email.com",
+    username: "someusername",
+    active: true,
+    sign_in_count: 1,
+};
+
+user1.username = "newusername";
+```
+
+**Critical Rule**: You cannot make just one field of the struct mutable - the entire struct must be mutable.
+
+Building Structs with Functions
+
+Function to construct new user instances:
+
+```rust
+fn build_user(email: String, username: String) -> User {
+    User {
+        email: email,
+        username: username,
+        active: true,
+        sign_in_count: 1,
+    }
+}
+```
+
+Field Init Shorthand Syntax
+
+When function arguments have the same name as struct fields, you can simplify:
+
+```rust
+fn build_user(email: String, username: String) -> User {
+    User {
+        email,
+        username,
+        active: true,
+        sign_in_count: 1,
+    }
+}
+```
+
+Creating Instances from Other Instances
+
+Struct Update Syntax - create new instances using existing instances:
+
+```rust
+let user3 = User {
+    email: "newemail@example.com",
+    username: "newusername",
+    ..user2
+};
+```
+
+How this works:
+- user3 gets the specified email and username
+- Remaining fields (active and sign_in_count) come from user2
+- Use **..user2** syntax to pull remaining values
+
+Tuple Structs
+
+Structs without named fields:
+
+```rust
+struct Color(i32, i32, i32);
+struct Point(i32, i32, i32);
+```
+
+Purpose of Tuple Structs:
+- Give entire tuple a name
+- Make tuple a different type than other tuples
+- Even with same field types, Color and Point are different types
+- A function expecting Point cannot accept Color
+
+Unit-Like Structs
+
+Structs without any fields exist but are covered in Chapter 10.
+
+String Ownership in Structs
+
+Important consideration for the User struct:
+
+```rust
+struct User {
+    username: String,  // Uses String, not &str
+    email: String,     // Uses String, not &str
+    sign_in_count: u64,
+    active: bool,
+}
+```
+
+**Why String instead of string slices (&str)**:
+- Fields own the string data
+- Fields could reference borrowed data (string slices)
+- Referencing borrowed data requires using lifetimes
+- Lifetimes are covered in Chapter 10
+
+### 5.2. An Example Program Using Structs
+
+Practical Example: Rectangle Area Calculator
+
+Initial Program Structure
+
+Starting with separate variables:
+
+```rust
+fn main() {
+    let width = 30;
+    let height = 50;
+    
+    println!("The area is {} pixels", area(width, height));
+}
+
+fn area(width: u32, height: u32) -> u32 {
+    width * height
+}
+```
+
+Running the program:
+- Command: cargo run
+- Output: 1500 pixels (correct)
+- Problem: Width and height are related but program doesn't express this relationship
+
+Refactoring with Tuples
+
+Grouping related variables:
+
+```rust
+fn main() {
+    let dimensions = (30, 50);
+    
+    println!("The area is {} pixels", area(dimensions));
+}
+
+fn area(dimensions: (u32, u32)) -> u32 {
+    dimensions.0 * dimensions.1
+}
+```
+
+Improvements:
+- Width and height grouped together in one variable
+- Pass single variable instead of two
+
+New Problem:
+- Fields in tuple aren't named
+- Not clear which is width or height (is first variable width or height?)
+
+Refactoring with Structs
+
+Creating Rectangle struct:
+
+```rust
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+fn main() {
+    let rect = Rectangle {
+        width: 30,
+        height: 50,
+    };
+    
+    println!("The area is {} pixels", area(&rect));
+}
+
+fn area(rectangle: &Rectangle) -> u32 {
+    rectangle.width * rectangle.height
+}
+```
+
+Key Points:
+- Function accepts reference to Rectangle (&Rectangle)
+- **Reason for reference**: Want to use fields but not take ownership
+- Pass reference from main: &rect
+
+Benefits:
+- Much more readable
+- Type for rectangle with meaningful fields
+- Clear what each value represents
+
+Derived Traits
+
+Printing Debug Information
+
+Attempting to print rectangle:
+
+```rust
+println!("{}", rect);  // Error!
+```
+
+Error message: Rectangle doesn't implement the display trait
+
+What is Display trait:
+- Specifies how something should be printed
+- Primitive types (integers) implement Display by default
+- Only one way to print an integer
+- Custom types (structs) must implement Display manually
+
+Debug Formatting Syntax
+
+Helpful hint suggests using:
+
+```rust
+println!("{:?}", rect);  // Still error!
+```
+
+New error: Rectangle doesn't implement Debug trait
+
+What is Debug trait:
+- Allows printing information useful to developers
+- Must be explicitly added to struct
+
+Adding Debug Trait
+
+Add derive annotation:
+
+```rust
+#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+fn main() {
+    let rect = Rectangle {
+        width: 30,
+        height: 50,
+    };
+    
+    println!("{:?}", rect);
+}
+```
+
+Output: Rectangle printed on single line
+
+Pretty Printing
+
+For better formatting:
+
+```rust
+println!("{:#?}", rect);
+```
+
+Result: Fields printed on separate lines (more readable)
+
+Understanding Derive:
+- Debug is a trait
+- Adding derive allows compiler to provide basic implementation
+- More about traits in Chapter 10
+
+### 5.3. Methods
+
+Method Syntax
+
+Current Problem
+
+The area function:
+- Very closely tied to Rectangle
+- Defined separately from Rectangle
+- Can be improved by grouping with Rectangle struct
+
+What Are Methods?
+
+Methods are similar to functions except:
+- Tied to an instance of a struct
+- First argument is always self (the instance)
+
+Creating an Implementation Block
+
+```rust
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+```
+
+Components:
+- **impl keyword** - starts implementation block
+- **Rectangle** - struct name
+- Implementation blocks house functions and methods associated with struct
+
+Method Definition Details
+
+First argument in method: **always self**
+- Represents the instance the method is being called on
+- Taking reference to Rectangle instance (&self)
+
+Other options for self:
+- Immutable reference (most common)
+- Mutable reference (&mut self)
+- Take ownership of instance (rare cases)
+
+In this case: only need a reference
+
+Method body:
+- Multiply width and height of instance
+- Access using self.width and self.height
+
+Using the Method
+
+Remove original area function and update main:
+
+```rust
+fn main() {
+    let rect = Rectangle {
+        width: 30,
+        height: 50,
+    };
+    
+    println!("The area is {} pixels", rect.area());
+}
+```
+
+Benefits:
+- Code is more organized
+- Clear that area function is associated with rectangles
+- Use dot notation to call method on instance
+
+Automatic Referencing and Dereferencing
+
+In languages like C++:
+- Different syntax for calling method on object directly
+- Different syntax for calling method on pointer to object
+
+In Rust:
+- Syntax is the same
+- Rust has automatic referencing and dereferencing feature
+- Compiler automatically adds &, &mut, or * to match method signature
+
+Methods with Multiple Parameters
+
+Creating can_hold Method
+
+Purpose: Determine if current rectangle can hold another rectangle inside itself
+
+```rust
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+    
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.width > other.width && self.height > other.height
+    }
+}
+```
+
+Method signature:
+- First argument: self (current instance)
+- Second argument: other (&Rectangle reference to another rectangle)
+- Return type: bool
+
+Method body:
+- Check if current instance has greater width AND height than passed-in rectangle
+
+Using can_hold Method
+
+```rust
+fn main() {
+    let rect = Rectangle {
+        width: 30,
+        height: 50,
+    };
+    
+    let rect1 = Rectangle {
+        width: 20,
+        height: 40,
+    };
+    
+    let rect2 = Rectangle {
+        width: 40,
+        height: 60,
+    };
+    
+    println!("Can rect hold rect1? {}", rect.can_hold(&rect1));
+    println!("Can rect hold rect2? {}", rect.can_hold(&rect2));
+}
+```
+
+Output:
+- rect cannot hold rect1: true (rect1 is smaller)
+- rect cannot hold rect2: false (rect2 is bigger)
+
+Associated Functions
+
+What Are Associated Functions?
+
+Unlike methods:
+- Not tied to an instance of struct
+- Don't receive self argument
+- Called on the struct type itself
+
+Multiple Implementation Blocks
+
+Structs allow multiple implementation blocks. Creating new block for example:
+
+```rust
+impl Rectangle {
+    fn square(size: u32) -> Rectangle {
+        Rectangle {
+            width: size,
+            height: size,
+        }
+    }
+}
+```
+
+Key Points:
+- Could define in original impl block
+- Using separate block for demonstration
+- Chapter 10 explains usefulness with generic types and traits
+
+Function Details:
+- No self argument (it's an associated function, not a method)
+- Takes size argument
+- Returns Rectangle instance
+- Creates square by setting width and height to same value
+
+Differentiating Methods and Associated Functions
+
+The self argument is the key:
+- **Methods**: Get passed self
+- **Associated functions**: Don't get passed self
+
+Using Associated Functions
+
+Call with double colon syntax:
+
+```rust
+fn main() {
+    let rect3 = Rectangle::square(25);
+}
+```
+
+Syntax: Rectangle::square instead of rect.square
+- Use struct name, not instance
+- Double colon (::) notation
+
+Chapter Summary
+
+What We Learned:
+- How to use structs to group related data and functionality
+- How structs relate to tuples
+- Using structs to refactor code for better readability and maintainability
+- Creating and using struct instances
+- Defining and calling methods on structs
+- Defining and calling associated functions
+- Implementing traits with derive
+- Organizing code with implementation blocks
+
+Key Concepts:
+- Structs create new types with named fields
+- Methods are tied to instances (receive self)
+- Associated functions are tied to type (no self)
+- Automatic referencing and dereferencing simplifies syntax
+- Multiple implementation blocks are allowed
+- Derived traits provide default implementations
