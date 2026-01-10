@@ -2083,11 +2083,176 @@ CHAPTER 3 COMPLETE
 
 ### 4.1. What Is Ownership?
 
+```rs
+fn main(){
+
+// Ownership 
+// Replaces the garbage collector
+// New way to manage memory in rust
+
+// Garbage Collector
+// java & c#
+// error free, faster write time
+// no control, slow runtime, unpredictable performance, larger program size
+
+// Manual Memory Management
+// C & C++
+// Full Control, Faster Runtime, Small Program Size
+// Error Prone Extreme, Slow Write time
+
+// Ownership Model
+// Rust
+// Control over memory, Faster Runtime, Smaller Program size, Error Free
+// Slow Write time, Learning Curve
+
+// Memory
+
+// Stack Memory
+// Fixed Size
+// each func -> stack frame gen., size cal. at compile time, vars inside stack => same size, variable live as long as stack lives
+
+// Heap Memory
+// Dynamic Size, More Flexible, Less Organized
+// Lifetime of data can be controlled
+
+// Stack Vs Heap Example
+   fn a(){ // a executed first
+        let x: &str = "Hello World";// Static // a's Stack frame add var
+        let y: u128 = 255;// Static // a's Stack frame add var
+        b(); // b executed
+    }//a's Stack Flushed with all it's variables
+
+    fn b(){
+        // Push stack frame for 'b' onto stack
+        let x: String = String::from("Momo"); // Dynamic
+        // Can't store directly on stack
+        // Heap allocates memory for string
+        // Heap returns a pointer
+        // Pointer is what's stored on stack
+
+        // When 'b' finishes, it gets popped off stack
+        // All variables of 'b' are dropped
+    }
+// Push to Stack is faster than Heap Allocation
+// Accessing Stack is Faster than Heap allocation
+// Heap is Slow than Stack in everything, but It has Control of Lifetime of Variable & Stack Variables are Fixed; Heap Variables are Dynamic
+
+// THE 3 OWNERSHIP RULES
+// 1 Each Var has One Owner
+// 2 One Var = Only One Owner
+// 3 When the Owner goes out of scope, the value is dropped
+
+// Ownership Example - Scope
+{   // New Scope Created
+
+    let s: &str = "Hello World!!!"; // String Literal
+    // s is Created
+    // s is valid from this point
+    // we can play with s
+
+}   // scope Ended, s Invalidated, Rust Drop it 
+
+// String Literal vs String Type
+// String Literal: Stored directly in binary, fixed size
+// String Type: Dynamic Size, Stored in Heap
+{   // New Scope Created
+
+    let s: String = String::from("Hello World!!!"); // String Type
+    // s is Created
+    // s is valid from this point
+    // we can play with s
+
+}   // scope Ended, s Invalidated, Rust Drop it 
+
+// In Rust, Allocation Happens Automatically During Declaration, DeAllocation Happens Automatically when Scope Ends ,Unlike C++(where `new`&`delete` keywords are required)
+
+// Interaction Between Varibles and Data 
+
+// Simple Copy
+// Copy Trait
+let x = 5;
+let y = x; // Yes, Value of x is copied to y // This does a COPY, not a move
+println!("{}", x);  // x is still valid 
+// 5
+
+// String Move
+let x = String::from("hi");
+// x under the hood:
+// - pointer: points to memory location on heap
+// - length: length of the string
+// - capacity: actual amount of memory allocated on heap
+let y = x; // Yes, But it Doesn't Clone the Value, it doesn't Shallow Copy(Both Vars point to same Val), Actually y takes ownership from x, making x invalidated and y is new owner of data
+println!("{}",y);
+// hi
+// println!("{}",x); // No
+// error[E0382]: borrow of moved value: `x`
+
+// Memory Safety Feature by rust
+// Rust defaults to Move Values
+
+// If Actually wanna clone the String Type
+let x = y.clone(); // Explicitly clone
+println!("{}",x);// hi
+println!("{}",y);// hi
+// Now Both are working
+
+// Ownership and Functions
+
+// Example: Moving into Functions
+let s = String::from("Hi");
+takes_ownership(s);// when s moved in function, function takes its ownership
+// Hi
+// Passing parameters into a function is the same as assigning to another variable
+
+// println!("{}",s); // NO, error[E0382]: borrow of moved value: `s`
+
+// Example: Copying into Functions
+let s: u128 = 10;
+makes_copy(s);// Ownership not given to function, Value Copied into it
+// Copy trait is implemented
+// 10
+println!("{}",s);// Yes Works fine! x is still valid
+
+// Returning Values and ownership
+
+// Example: Giving Ownership
+let s = gives_ownership(); // Function Gives Ownership to Another Var
+println!("{}",s);// Yes 
+// Hello
+
+// Example: Taking and Giving Back
+let s = String::from("Hayabusamaru");
+let s1 = takes_and_gives_back_ownership(s);
+// Function takes Ownership from Arguement, and then gives it as Return
+
+// println!("{}",s);// error[E0382]: borrow of moved value: `s`
+println!("{}",s1);
+// Hayabusamaru
+
+}
+
+fn takes_ownership(some_string: String){println!("{}",some_string);}
+
+fn makes_copy(some_u128: u128){println!("{}",some_u128);}
+
+fn gives_ownership() -> String{
+    let some_string = String::from("Hello");
+    some_string // Return moves ownership out of function
+}
+
+fn takes_and_gives_back_ownership(some_string: String) -> String {
+    // Function takes Ownership from Arguement, and then gives it as Return
+    some_string // Return moves value back out
+}
+```
+
+---
+
 **INTRODUCTION**
 
 - This covers Chapter 4 of the Rust programming language book
 - Chapter 4 covers Rust's most unique feature: **ownership**
-- Ownership allows Rust to make memory safety guarantees without using a garbage collector
+- Ownership allows Rust to make memory safety guarantees without **using a garbage collector**
 - Topics covered:
   - Ownership model
   - References
@@ -2105,6 +2270,20 @@ CHAPTER 3 COMPLETE
 ---
 
 **MEMORY MANAGEMENT APPROACHES**
+
+| Memory Model              | Pros                                                                 | Cons                                                                 |
+|---------------------------|----------------------------------------------------------------------|----------------------------------------------------------------------|
+| Garbage collection        | • Error free*                                                       | • No control over memory                                            |
+|                           | • Faster write time                                                 | • Slower and unpredictable runtime performance                      |
+|                           |                                                                      | • Larger program size                                               |
+| Manual memory management  | • Control over memory                                               | • Error prone                                                       |
+|                           | • Faster runtime                                                    | • Slower write time                                                 |
+|                           | • Smaller program size                                              |                                                                      |
+| Ownership model           | • Control over memory                                               | • Slower write time                                                 |
+|                           | • Error free*                                                       |   Learning curve (fighting with the borrow checker)                 |
+|                           | • Faster runtime                                                    |                                                                      |
+|                           | • Smaller program size                                              |                                                                      |
+
 
 **1. GARBAGE COLLECTION**
 
@@ -2151,12 +2330,13 @@ Rust is a systems programming language, so it cares about runtime performance an
 - **Control over memory**
 - **Faster runtime**
 - **Smaller program size**
-- **Error-free**: Memory safe (with asterisk - can opt out with `unsafe` keyword, but meant to be used sparingly)
+- **Error-free**: Memory safe, Not allow Memory Management Direct Defau  ltly, But (can opt out with `unsafe` keyword, but meant to be used sparingly)
 
 **How it achieves memory safety:**
 - Does compile-time checks to ensure you're using memory safely
 
 **Cons:**
+- Learning Curve
 - **Slower write time**: Slower than manual memory management
 - Rust has a strict set of rules around memory management
 - Breaking these rules causes compile-time errors you must deal with
@@ -2172,6 +2352,8 @@ Rust is a systems programming language, so it cares about runtime performance an
 **STACK VS HEAP MEMORY**
 
 Understanding stack and heap is crucial because Rust makes decisions based on whether memory is stored on the stack or heap.
+
+![alt text](image-4.png)
 
 **THE STACK**
 
@@ -2202,6 +2384,19 @@ fn b() {
     // All variables of 'b' are dropped
 }
 ```
+```rs
+fn main() {
+    fn a() {
+        let x: &str = "hello";
+        let y: i32 = 22;
+        b();
+    }
+
+    fn b() {
+        let x: String = String::from("world");
+    }
+}
+```
 
 **THE HEAP**
 
@@ -2213,9 +2408,9 @@ fn b() {
   - You control the lifetime of the data
 
 **Memory Access Speed:**
-- **Pushing to stack**: Faster than allocating on heap
+- **Pushing to stack**: Faster than allocating on heap !!!
 - **Heap allocation**: Takes time because heap must find a place to store new data
-- **Accessing stack data**: Faster than accessing heap data
+- **Accessing stack data**: Faster than accessing heap data !!!
 - **Accessing heap data**: Slower because you must follow a pointer
 
 ---
@@ -2267,10 +2462,10 @@ fn b() {
 **OWNERSHIP EXAMPLE - SCOPE**
 
 ```rust
-{
+{// New Scope created
     // s is not valid here - not declared yet
     
-    let s = "hello";  // s is declared
+    let s:&str = "hello";  // s is declared
                       // s is valid from this point forward
                       // Can do things with s
     
@@ -2281,7 +2476,7 @@ fn b() {
 
 **String Literals vs String Type:**
 - **String literal**: Stored directly in binary, fixed size
-- **String type**: Dynamic size, can be mutated, stored on heap
+- **String type**: **Dynamic size**, can be mutated, stored on heap
 
 ---
 
@@ -2299,7 +2494,7 @@ fn b() {
 
 **Comparison to C++:**
 - In C++: Use `new` keyword to allocate, `delete` keyword to deallocate
-- In Rust: Allocation happens automatically when declaring, deallocation happens automatically when scope ends
+- In Rust: Allocation happens automatically when declaring, deallocation happens automatically when scope ends `let s = String::from("hello"); `
 
 ---
 
@@ -2314,7 +2509,8 @@ let y = x;  // This does what you expect
 ```
 
 **EXAMPLE 2: STRING MOVE**
-
+- s1
+  - ![alt text](image-5.png)
 ```rust
 let s1 = String::from("hello");
 // s1 under the hood:
@@ -2328,22 +2524,29 @@ let s2 = s1;
 **What happens with `let s2 = s1;`?**
 
 **What some expect (WRONG):**
+- No 
+  - ![alt text](image-6.png)
 - Clone the value
 - s1 points to "hello" on heap
 - s2 points to a NEW "hello" on heap
 - This would be very expensive
 
 **What others expect (WRONG):**
+- No
+  - ![alt text](image-7.png)
 - Shallow copy
 - s1 points to "hello" on heap
 - s2 also points to SAME "hello" on heap
 - This is close, but not quite right
 
 **What ACTUALLY happens:**
+- Yes
+  - ![alt text](image-8.png)
 - **Move operation**
 - s1 is **invalidated**
 - s2 now owns the String
 - This ensures memory safety
+- safety feature by rust !!!
 
 ---
 
@@ -2407,9 +2610,9 @@ println!("{}", x);  // x is still valid
 
 ```rust
 fn main() {
-    let s = String::from("hello");
+    let s: String = String::from("hello");
     
-    takes_ownership(s);  // s is moved into function
+    takes_ownership(some_string: s);  // s is moved into function
     
     println!("{}", s);  // ERROR! Cannot use s after move
 }
@@ -2488,6 +2691,23 @@ fn takes_and_gives_back(a_string: String) -> String {
 **THE PROBLEM WITH OWNERSHIP TRANSFER**
 
 **Tedious example:**
+```rust
+fn main() {
+    let s1: String = String::from("hello");
+    let len: usize = calculate_length(s1);
+    println!("The length of '{}' is {}.", s1, len);
+}
+
+fn calculate_length(s: String) -> usize {
+    let length: usize = s.len(); // len() returns the length of a String
+    length
+}
+
+```
+**Problem**
+This code will not compile as-is because s1 is moved into calculate_length(s1), so it can’t be used again in println!.
+
+**Tedious Solution:**
 
 ```rust
 fn main() {
@@ -2508,7 +2728,7 @@ fn calculate_length(s: String) -> (String, usize) {
 - Have to return tuple to give ownership back
 - Not something you'd want to write
 
-**Solution: REFERENCES**
+**Better Solution: REFERENCES**
 
 ---
 
@@ -2526,7 +2746,11 @@ fn main() {
     println!("Length of '{}' is {}.", s1, len);  // s1 still valid
 }
 
-fn calculate_length(s: &String) -> usize {  // Takes reference to String
+fn calculate_length(s: &String) -> usize 
+// Borrowing: Passing references as function parameters
+// - You're borrowing the value
+// - Not taking ownership of it
+{  // Takes reference to String
     s.len()
 }  // s goes out of scope, but doesn't drop the value
    // because s doesn't own it
@@ -2534,7 +2758,7 @@ fn calculate_length(s: &String) -> usize {  // Takes reference to String
 
 **Key points:**
 - Use `&` to create a reference
-- References don't take ownership
+- References don't take ownership of the underlying value
 - When reference goes out of scope, the underlying value is NOT dropped
 
 ---
@@ -2542,8 +2766,8 @@ fn calculate_length(s: &String) -> usize {  // Takes reference to String
 **REFERENCE MEMORY DIAGRAM**
 
 From the Rust book:
-
-![alt text](image-3.png)
+- A diagram of &String s pointing at String s1
+    - ![alt text](image-3.png)
 
 ```
 s (reference) --> s1 --> String data on heap
@@ -2551,7 +2775,7 @@ s (reference) --> s1 --> String data on heap
 
 - `s` is a reference pointing to `s1`
 - `s1` is the owner pointing to the String on the heap
-- When `s` is dropped, `s1` still points to the String
+- **When `s` is dropped, `s1` still points to the String**
 
 ---
 
@@ -2584,15 +2808,15 @@ To modify a value through a reference:
 
 ```rust
 fn main() {
-    let mut s = String::from("hello");  // Make variable mutable
+    let mut s = String::from("hello");  // 1. Make variable mutable
     
-    change(&mut s);  // Pass mutable reference
+    change(&mut s);  // 2. Pass mutable reference
     
     println!("{}", s);  // Prints: "hello, world"
 }
 
-fn change(some_string: &mut String) {  // Take mutable reference
-    some_string.push_str(", world");  // Can now modify
+fn change(some_string: &mut String) {  // 3. Take mutable reference
+    some_string.push_str(", world");  //4. Can now modify
 }
 ```
 
@@ -2629,6 +2853,16 @@ A data race occurs when:
 4. Result: One pointer tries to read data while the other is modifying it
 5. Outcome: Corrupt data
 
+**Fix: just keep them immutable**
+```rust
+let s = String::from("hello");
+
+let r1 = &s;
+let r2 = &s; 
+
+println!("{}, {}", r1, r2);
+```
+
 ---
 
 **MIXING IMMUTABLE AND MUTABLE REFERENCES**
@@ -2653,6 +2887,16 @@ println!("{}, {}, {}", r1, r2, r3);
 - Can have multiple immutable references
 - OK because underlying data won't change
 
+```rust
+let s = String::from("hello");
+
+let r1 = &s;      // Immutable reference - OK
+let r2 = &s;      // Another immutable reference - OK
+let r3 = &s;    // Another immutable reference - OK  
+
+println!("{}, {}, {}", r1, r2, r3);
+```
+
 ---
 
 **REFERENCE SCOPE RULES**
@@ -2668,7 +2912,7 @@ let r2 = &s;  // r2 scope starts here
 println!("{}, {}", r1, r2);  // r1 and r2 last used here
                              // r1 and r2 scope ends here
 
-let r3 = &mut s;  // Works fine! r1 and r2 are out of scope
+let r3 = &mut s;  // YES, Works fine! r1 and r2 are out of scope
 
 println!("{}", r3);
 ```
@@ -2685,7 +2929,7 @@ What if a reference points to invalid data?
 
 ```rust
 fn main() {
-    let reference_to_nothing = dangle();
+    let reference_to_nothing = dangle();// Error
 }
 
 fn dangle() -> &String {  // Returns reference to String
@@ -2704,7 +2948,9 @@ fn dangle() -> &String {  // Returns reference to String
 - Reference would point to invalid memory
 - Rust prevents this at compile time
 
-**Solution:** Return the String directly (transfer ownership), not a reference
+**Solution:** Return the String directly (transfer ownership), not a reference. or use lifetime(ch10)
+
+> Rust prevent us to do memory unsafe stuff
 
 ---
 
@@ -2817,6 +3063,8 @@ let world = &s[6..11];  // String slice from index 6 to 11 (exclusive)
 - `end` is exclusive
 
 **Memory diagram from Rust book:**
+- A string slice referring to part of a String
+  - ![alt text](image-9.png)
 - `s` is the String with pointer to heap
 - `world` is a string slice
 - `world` is a reference pointing to same string on heap, starting at index 6
@@ -2868,6 +3116,31 @@ fn first_word(s: &String) -> &str {  // Return string slice
 - Return type is `&str` (string slice type)
 - When space found, return `&s[..i]` (slice from beginning to index)
 - When no space found, return `&s[..]` (slice of entire string)
+
+```rs
+fn main() {
+    let mut s: String = String::from("hello world");
+
+    let hello: &str = &s[..5];
+    let world: &str = &s[..];
+
+    let word: &str = first_word(&s);
+    s.clear();
+}
+
+fn first_word(s: &String) -> &str {
+    let bytes: &[u8] = s.as_bytes();
+
+    for (i: usize, &item: u8) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return &s[0..i];
+        }
+    }
+
+    &s[..]
+}
+
+```
 
 ---
 
@@ -2933,6 +3206,36 @@ fn main() {
 - String literals are already string slices
 - Using `&str` parameter makes function more flexible
 
+```rs
+fn main() {
+    let mut s: String = String::from("hello world");
+    let s2: &str = "hello world";
+
+    let word: &str = first_word(&s);
+    // let word: &str = first_word(s2);
+}
+
+fn first_word(s: &str) -> &str {
+    let bytes: &[u8] = s.as_bytes();
+
+    for (i: usize, &item: u8) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return &s[0..i];
+        }
+    }
+
+    &s[..]
+}
+
+```
+- this version is idiomatic and correct
+- Demonstrates that the same function works for both:
+```rs
+first_word(&s);
+first_word(s2);
+```
+- Design functions to accept references (&str) instead of owned types (String) unless ownership is required.
+
 ---
 
 **TYPE NOTATION**
@@ -2947,9 +3250,9 @@ fn main() {
 Slices work on other collection types too:
 
 ```rust
-let a = [1, 2, 3, 4, 5];  // Array of integers
+let a: [i32; _] = [1, 2, 3, 4, 5];  // Array of integers
 
-let slice = &a[0..2];  // Slice of array
+let slice: &[i32] = &a[0..2];  // Slice of array
                        // References first two values
 ```
 
