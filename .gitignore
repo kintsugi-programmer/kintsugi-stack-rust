@@ -23,3 +23,5 @@ target
 # .out .exe
 *.exe
 *.out
+
+tempCodeRunnerFile.rs
