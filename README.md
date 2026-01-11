@@ -2687,6 +2687,7 @@ fn takes_and_gives_back(a_string: String) -> String {
 ```
 
 ### 4.2. References and Borrowing
+
 ```rs
 // Reference and Borrowing
 
@@ -2799,6 +2800,11 @@ fn main(){
     println!("{}", r3);
     // hello
 
+// Dangling References
+    // What if a reference points to invalid data?
+    // let reference_to_nothing = dangle();// No, error[E0106]: missing lifetime specifier  
+    // Observe function
+
 // Rule of References
     // 1. At any time , for a particular peice of data in a particular scope, 
     // we can have either 
@@ -2844,6 +2850,28 @@ fn main(){
     fn change(some_string: &mut String){ // 3. Function takes mutable reference with `&mut`
         some_string.push_str(", world !!!");
     } // Yes
+
+// Dangling References
+
+    // No
+    // fn dangle() -> &String {  // Returns reference to String
+    //     let s = String::from("hello");  // s created in this scope
+        
+    //     &s  // Return reference to s
+    // }  // s goes out of scope and is dropped
+    // // Reference points to deallocated memory!
+
+    // Error: "this function's return type contains a borrowed value, but there is no value for it to be borrowed from"
+
+    // Why error?
+    // - `s` is defined within function scope
+    // - When function ends, `s` is dropped (deallocated)
+    // - Reference would point to invalid memory
+    // - Rust prevents this at compile time
+
+    // Solution: Return the String directly (transfer ownership), not a reference. or use lifetime(ch10)
+
+// Rust prevent us to do memory unsafe stuff
 ```
 
 ---
